@@ -205,9 +205,11 @@ require("lazy").setup({
   { "tanvirtin/monokai.nvim", priority = 1000 },
 })
 
+-- LSP capabilities necessary for nvim-cmp completion
 local caps = require('cmp_nvim_lsp').default_capabilities()
 
 require('lspconfig').clangd.setup({
+  cmd = { '/usr/llvm/trunk/bin/clangd' },
   capabilities = caps,
   on_attach = function(client, bufnr)
     local hints = require("clangd_extensions.inlay_hints")
