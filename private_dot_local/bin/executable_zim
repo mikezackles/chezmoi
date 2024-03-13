@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+# Get list of absolute paths either from stdin or as args
+if [[ ! -t 0 ]]; then # Check if stdin has data
+  FILES=($(cat -))
+  if [[ ${#FILES[@]} -eq 0 ]]; then
+    echo "No file(s) chosen" >&2
+    exit 1
+  fi
+else
+  FILES=($(echo $@))
+fi
+if [[ ${#FILES[@]} -ne 0 ]]; then
+  FILES=($(realpath ${FILES[@]}))
+  if [[ $? -ne 0 ]]; then
+    echo "Arguments should be valid paths" >&2
+    exit 1
+  fi
+fi
+
+# Find the top-level git repo if there is one
+while [[ "$(pwd)" != "/" ]]; do
+  if [[ -n "$(ls -A .git 2>/dev/null)" ]]; then
+    TOP_REPO=`pwd`
+  fi
+  cd ..
+done
+
+# If there isn't one, we're done
+if [[ -z "$TOP_REPO" ]]; then
+  echo "No .git directory found!" >&2
+  exit 1
+fi
+
+# Get a (probably) unique identifier representing the git repo
+SESSION_ID="zim_$(echo $TOP_REPO | sha1sum | head -c 10)"
+
+# Use the git repo as the working directory
+cd "$TOP_REPO"
+
+# Make tmux happy
+# See https://github.com/tmux/tmux/issues/3454
+if [[ -t 2 ]]; then
+  exec <> "$(tty </dev/stderr)"
+fi
+if tmux has-session -t $SESSION_ID >/dev/null 2>&1; then
+  # There's a tmux session already. Tell the vim server to open the files, and
+  # then attach to the server.
+  # Right now neovim hangs if a macro is being recorded, so we time out in that
+  # case
+  if [[ ${#FILES[@]} -ne 0 ]]; then
+    timeout --kill-after=1s 3s nvim --server /tmp/$SESSION_ID --remote ${FILES[@]} >/dev/null 2>&1
+  fi
+  exec tmux attach -t $SESSION_ID >/dev/null 2>&1
+else
+  # There's not a tmux session. Create one and launch a neovim server inside
+  # it. Bind C-z so that it detaches from the tmux session.
+  rm -f /tmp/$SESSION_ID
+  exec tmux new-session -s $SESSION_ID \
+    nvim --listen /tmp/$SESSION_ID ${FILES[@]} \; \
+    bind-key -T root C-z detach \; \
+    set-option focus-events on \; \
+    set status off \; \
+    set escape-time 0 \; \
+    >/dev/null 2>&1
+fi
+
