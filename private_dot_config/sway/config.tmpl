@@ -1,10 +1,18 @@
 set $mod Mod4
 set $win Mod1
 font pango:Droid Sans 6
+{{- if eq .chezmoi.hostname "frame13" }}
+default_border pixel 4
+{{- else }}
 default_border pixel 5
+{{- end }}
 # Use mouse+$mod to drag floating windows
 floating_modifier $win
+{{- if eq .chezmoi.hostname "bigrig" }}
 bindsym $mod+Return exec foot -f 'monospace:size=16'
+{{- else }}
+bindsym $mod+Return exec foot
+{{- end }}
 bindsym $mod+Shift+Q kill
 bindsym $mod+d exec bemenu-run
 bindsym $mod+h focus left
@@ -105,9 +113,20 @@ bar swaybar_command waybar
 
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 
+{{- if eq .chezmoi.hostname "bigrig" }}
 # Trying this out (see https://github.com/swaywm/sway/issues/4511)
 input * middle_emulation disabled
 # primary_selection disabled
+{{- end }}
+
+# Add idle management
+# Time out after 10 minutes. Turn off screen 10 secs later. Screen on on resume. Lock screen on sleep.
+exec swayidle -w \
+  timeout 600 'swaylock -f --grace 20 --screenshots --effect-blur 4x5 --effect-vignette 0.5:0.5 --effect-pixelate 5' \
+  timeout 610 'swaymsg "output * power off"' \
+  resume 'swaymsg "output * power on"' \
+  before-sleep 'swaylock --screenshots --effect-blur 4x5 --effect-vignette 0.5:0.5 --effect-pixelate 5'
+  #before-sleep 'playerctl pause' # pause media players
 
 #output HDMI-A-2 pos 0 0 res 3440x1440 scale 1.75
 #output eDP-1 pos 0 823 res 2560x1600 scale 2
