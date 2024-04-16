@@ -114,6 +114,7 @@ bar swaybar_command waybar
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 
 {{- if eq .chezmoi.hostname "bigrig" }}
+
 # Trying this out (see https://github.com/swaywm/sway/issues/4511)
 input * middle_emulation disabled
 # primary_selection disabled
