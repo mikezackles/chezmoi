@@ -53,8 +53,8 @@ require("lazy").setup({
           "fish", "git_config", "gitattributes", "gitcommit", "gitignore",
           "glsl", "go", "html", "javascript", "json", "llvm", "lua", "luau",
           "make", "markdown", "meson", "mlir", "ninja", "nix", "perl",
-          "python", "qmldir", "qmljs", "rust", "sql", "toml", "typescript",
-          "vim", "vimdoc", "xml", "yaml", "zig",
+          "python", "qmldir", "qmljs", "rust", "sql", "tablegen", "toml",
+          "typescript", "vim", "vimdoc", "xml", "yaml", "zig",
         },
         sync_install = false,
         auto_install = false,
@@ -209,7 +209,8 @@ require("lazy").setup({
 local caps = require('cmp_nvim_lsp').default_capabilities()
 
 require('lspconfig').clangd.setup({
-  cmd = { '/usr/llvm/trunk/bin/clangd' },
+  --cmd = { '/usr/llvm/trunk/bin/clangd' },
+  cmd = { '/usr/llvm/18/bin/clangd' },
   capabilities = caps,
   on_attach = function(client, bufnr)
     local hints = require("clangd_extensions.inlay_hints")
@@ -226,6 +227,16 @@ vim.keymap.set('n', '<leader>df', vim.diagnostic.open_float, { desc = "Open floa
 vim.keymap.set('n', '<leader>dn', vim.diagnostic.goto_prev, { desc = "Go to next diagnostic" })
 vim.keymap.set('n', '<leader>dp', vim.diagnostic.goto_next, { desc = "Go to previous diagnostic" })
 vim.keymap.set('n', '<leader>dl', vim.diagnostic.setloclist, { desc = "Add diagnostics to location list" })
+local hide_diagnostics = function()
+  --vim.diagnostic.hide(nil, 0)
+  vim.diagnostic.config({ virtual_text = false })
+end
+local show_diagnostics = function()
+  --vim.diagnostic.show(nil, 0)
+  vim.diagnostic.config({ virtual_text = true })
+end
+vim.keymap.set('n', '<leader>dh', hide_diagnostics, { desc = 'Hide right margin diagnostics' })
+vim.keymap.set('n', '<leader>ds', show_diagnostics, { desc = 'Show right margin diagnostics' })
 
 -- Add buffer-local key mappings when LSP becomes active
 vim.api.nvim_create_autocmd('LspAttach', {
