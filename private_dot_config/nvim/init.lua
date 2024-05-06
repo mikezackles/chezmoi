@@ -203,14 +203,22 @@ require("lazy").setup({
   { "neanias/everforest-nvim", priority = 1000 },
   { "rebelot/kanagawa.nvim", priority = 1000 },
   { "tanvirtin/monokai.nvim", priority = 1000 },
+  { "stevearc/qf_helper.nvim",
+    config = function ()
+      require("qf_helper").setup({
+        quickfix = {
+          default_bindings = false,
+        },
+      })
+    end,
+  },
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
 local caps = require('cmp_nvim_lsp').default_capabilities()
 
 require('lspconfig').clangd.setup({
-  --cmd = { '/usr/llvm/trunk/bin/clangd' },
-  cmd = { '/usr/llvm/18/bin/clangd' },
+  --cmd = { '/usr/llvm/18/bin/clangd' },
   capabilities = caps,
   on_attach = function(client, bufnr)
     local hints = require("clangd_extensions.inlay_hints")
@@ -288,8 +296,15 @@ require("which-key").register({
   [' '] = { "<cmd>e #<cr>", "Switch to most recent buffer" },
   b = {
     name = "Buffers",
+    n = { "<cmd>bnext<cr>", "Next" },
     p = { "<cmd>bprevious<cr>", "Previous" },
-    n = { "<cmd>bnext<cr>", "Next" }
+  },
+  q = {
+    name = "Quickfix/Location",
+    n = { "<cmd>QNext<cr>", "Next" },
+    p = { "<cmd>QPrev<cr>", "Previous" },
+    q = { "<cmd>QFToggle!<cr>", "Toggle QuickFix" },
+    l = { "<cmd>LLToggle!<cr>", "Toggle Location List" },
   },
   c = {
     name = "Colors",
