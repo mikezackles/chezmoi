@@ -2,6 +2,8 @@ c.content.autoplay = False
 c.session.lazy_restore = True
 config.bind('J', 'scroll-page 0 0.5')
 config.bind('K', 'scroll-page 0 -0.5')
+config.bind('H', 'scroll-page -0.5 0')
+config.bind('L', 'scroll-page 0.5 0')
 config.bind('h', 'tab-prev')
 config.bind('l', 'tab-next')
 config.bind('t', 'set-cmd-text -s :open -t')
