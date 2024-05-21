@@ -223,7 +223,7 @@ require('lspconfig').clangd.setup({
   on_attach = function(client, bufnr)
     local hints = require("clangd_extensions.inlay_hints")
     hints.setup_autocmd()
-    hints.set_inlay_hints()
+    --hints.set_inlay_hints()
     -- TODO - Should the autocmd below go here?
   end,
 })
