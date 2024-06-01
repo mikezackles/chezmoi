@@ -220,12 +220,8 @@ local caps = require('cmp_nvim_lsp').default_capabilities()
 require('lspconfig').clangd.setup({
   --cmd = { '/usr/llvm/18/bin/clangd' },
   capabilities = caps,
-  on_attach = function(client, bufnr)
-    local hints = require("clangd_extensions.inlay_hints")
-    hints.setup_autocmd()
-    --hints.set_inlay_hints()
-    -- TODO - Should the autocmd below go here?
-  end,
+  --on_attach = function(client, bufnr)
+  --end,
 })
 
 vim.keymap.set('n', '<leader>pl', '<cmd>Lazy<cr>', { desc = "Lazy package manager" })
