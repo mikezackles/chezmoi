@@ -218,7 +218,13 @@ require("lazy").setup({
 local caps = require('cmp_nvim_lsp').default_capabilities()
 
 require('lspconfig').clangd.setup({
-  --cmd = { '/usr/llvm/18/bin/clangd' },
+  cmd = {
+    '/usr/llvm/18/bin/clangd',
+    -- IIUC, clangd doesn't recognize c++ as a compiler, so we have to
+    -- whitelist it here to give clangd permission to run it and detect that
+    -- it's actually gcc
+    '--query-driver=/usr/bin/c++',
+  },
   capabilities = caps,
   --on_attach = function(client, bufnr)
   --end,
