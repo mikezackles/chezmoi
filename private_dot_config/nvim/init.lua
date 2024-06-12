@@ -380,6 +380,9 @@ vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 vim.opt.softtabstop = 2
 
+-- Highlight the line the cursor is on
+vim.opt.cursorline = true
+
 -- Use textwidth to mark character limit
 vim.opt.colorcolumn = "+1"
 
