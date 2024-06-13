@@ -7,6 +7,12 @@ if status is-interactive
   # Add local executables to path
   set -U fish_user_paths ~/.local/bin
   set -Ux EDITOR nvim
+
+  # This should be set by libelf in /etc/profile.d, but it seems like fish was
+  # overlooked. Those scripts use the contents of
+  # /etc/debuginfod/archlinux.urls, but there's just the one server currently,
+  # so we set it manually:
+  set -Ux DEBUGINFOD_URLS https://debuginfod.archlinux.org
 end
 
 # Accept autosuggestions in a sane way
