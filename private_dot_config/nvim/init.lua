@@ -254,9 +254,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
     -- simplify registering key bindings with which-key
     local wk = require("which-key")
-    wk.register({ l = { name = "LSP" } }, { prefix = '<leader>', buffer = event.buf })
+    wk.add({{ "<leader>l", buffer = event.buf, group = "LSP" }})
     local map_keys = function(keys, cmd, desc)
-      wk.register({[keys] = { cmd, desc, buffer = event.buf}})
+      wk.add({{ keys, cmd, buffer = event.buf, desc = desc }})
     end
     -- helper for checking for binding keys to function only if it exists
     local try_map_keys = function(keys, cmd, desc)
@@ -294,78 +294,71 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
-require("which-key").register({
-  [' '] = { "<cmd>e #<cr>", "Switch to most recent buffer" },
-  b = {
-    name = "Buffers",
-    n = { "<cmd>bnext<cr>", "Next" },
-    p = { "<cmd>bprevious<cr>", "Previous" },
-  },
-  q = {
-    name = "Quickfix/Location",
-    n = { "<cmd>QNext<cr>", "Next" },
-    p = { "<cmd>QPrev<cr>", "Previous" },
-    q = { "<cmd>QFToggle!<cr>", "Toggle QuickFix" },
-    l = { "<cmd>LLToggle!<cr>", "Toggle Location List" },
-  },
-  c = {
-    name = "Colors",
-    b = { "<cmd>exec &bg=='light'? 'set bg=dark' : 'set bg=light'<cr>", "Toggle light/dark background" },
-    g = { "<cmd>colorscheme gruvbox<cr>", "Gruvbox" },
-    m = { "<cmd>colorscheme monokai_soda<cr>", "Monokai Soda" },
-    r = { "<cmd>colorscheme monokai_ristretto<cr>", "Monokai Ristretto" },
-    p = { "<cmd>colorscheme monokai_pro<cr>", "Monokai Pro" },
-    e = { "<cmd>colorscheme everforest<cr>", "Everforest" },
-    o = { "<cmd>colorscheme onedark_dark<cr>", "OneDark Dark" },
-    d = { "<cmd>colorscheme rose-pine-dawn<cr>", "Rose Pine Dawn" },
-  },
-  d = { name = "Diagnostics" },
-  p = { name = "Package Management" },
-  --l = { name = "LSP" },
-  f = { name = "Fold" },
-  t = {
-    name = "Telescope",
-    b = {
-      name = "Builtins",
-      b = { "<cmd>lua require('telescope.builtin').buffers({})<cr>", "Buffers" },
-      F = { "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", "Previously open files" },
-      -- TODO: Only map this in C++ files
-      c = { "<cmd>lua require('telescope.builtin').find_files({ hidden = true, default_text = \".cpp$ | .hpp$ | 'meson.build \" })<cr>", "C++ files" },
-      f = { "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", "Find files" },
-      t = { "<cmd>lua require('telescope.builtin').git_files({})<cr>", "Find git files" },
-      G = { "<cmd>lua require('telescope.builtin').grep_string({})<cr>", "Cursor grep" },
-      g = { "<cmd>lua require('telescope.builtin').live_grep({})<cr>", "Grep" },
-      C = { "<cmd>lua require('telescope.builtin').commands({})<cr>", "Commands" },
-      h = { "<cmd>lua require('telescope.builtin').command_history({})<cr>", "Command history" },
-      m = { "<cmd>lua require('telescope.builtin').marks({})<cr>", "Marks" },
-      s = { "<cmd>lua require('telescope.builtin').colorscheme({})<cr>", "Colorscheme" },
-      q = { "<cmd>lua require('telescope.builtin').quickfix({})<cr>", "Quickfix" },
-      Q = { "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", "Quickfix lists" },
-      l = { "<cmd>lua require('telescope.builtin').loclist({})<cr>", "Location list" },
-      j = { "<cmd>lua require('telescope.builtin').jumplist({})<cr>", "Jump list" },
-      v = { "<cmd>lua require('telescope.builtin').vim_options({})<cr>", "Vim options" },
-      r = { "<cmd>lua require('telescope.builtin').registers({})<cr>", "Registers" },
-      z = { "<cmd>lua require('telescope.builtin').spell_suggest({})<cr>", "Spelling" },
-      ['/'] = { "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", "Search current buffer" },
-      p = { "<cmd>lua require('telescope.builtin').pickers({})<cr>", "Pickers" },
-    },
-    l = {
-      name = "LSP",
-      r = { "<cmd>lua require('telescope.builtin').lsp_references({})<cr>", "References" },
-      c = { "<cmd>lua require('telescope.builtin').lsp_incoming_calls({})<cr>", "Incoming calls" },
-      C = { "<cmd>lua require('telescope.builtin').lsp_outgoing_calls({})<cr>", "Outgoing calls" },
-      s = { "<cmd>lua require('telescope.builtin').lsp_document_symbols({})<cr>", "Document symbols" },
-      w = { "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>", "Workspace symbols" },
-      W = { "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({})<cr>", "Dynamic workspace symbols" },
-      e = { "<cmd>lua require('telescope.builtin').diagnositics({})<cr>", "Diagnostics" },
-      i = { "<cmd>lua require('telescope.builtin').lsp_implementations({})<cr>", "Implementations" },
-      d = { "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", "Definitions" },
-      t = { "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", "Type Definitions" },
-    },
-    t = { "<cmd>lua require('telescope.builtin').treesitter({})<cr>", "Treesitter" },
-  },
-}, {
-  prefix = '<leader>'
+-- vim.api.nvim_create_autocmd("FileChangedShellPost", {
+--   desc = 'Destroy buffers for deleted files',
+--   callback = function (args)
+--     if vim.v.fcs_reason == "deleted" then
+--       vim.api.nvim_buf_delete(args.buf, { force = true })
+--     end
+--   end,
+-- })
+
+require("which-key").add({
+  { "<leader> ", "<cmd>e #<cr>", desc = "Switch to most recent buffer" },
+  { "<leader>b", group = "Buffers" },
+  { "<leader>bn", "<cmd>bnext<cr>", desc = "Next" },
+  { "<leader>bp", "<cmd>bprevious<cr>", desc = "Previous" },
+  { "<leader>c", group = "Colors" },
+  { "<leader>cb", "<cmd>exec &bg=='light'? 'set bg=dark' : 'set bg=light'<cr>", desc = "Toggle light/dark background" },
+  { "<leader>cd", "<cmd>colorscheme rose-pine-dawn<cr>", desc = "Rose Pine Dawn" },
+  { "<leader>ce", "<cmd>colorscheme everforest<cr>", desc = "Everforest" },
+  { "<leader>cg", "<cmd>colorscheme gruvbox<cr>", desc = "Gruvbox" },
+  { "<leader>cm", "<cmd>colorscheme monokai_soda<cr>", desc = "Monokai Soda" },
+  { "<leader>co", "<cmd>colorscheme onedark_dark<cr>", desc = "OneDark Dark" },
+  { "<leader>cp", "<cmd>colorscheme monokai_pro<cr>", desc = "Monokai Pro" },
+  { "<leader>cr", "<cmd>colorscheme monokai_ristretto<cr>", desc = "Monokai Ristretto" },
+  { "<leader>d", group = "Diagnostics" },
+  { "<leader>f", group = "Fold" },
+  { "<leader>p", group = "Package Management" },
+  { "<leader>q", group = "Quickfix/Location" },
+  { "<leader>ql", "<cmd>LLToggle!<cr>", desc = "Toggle Location List" },
+  { "<leader>qn", "<cmd>QNext<cr>", desc = "Next" },
+  { "<leader>qp", "<cmd>QPrev<cr>", desc = "Previous" },
+  { "<leader>qq", "<cmd>QFToggle!<cr>", desc = "Toggle QuickFix" },
+  { "<leader>t", group = "Telescope" },
+  { "<leader>tb", group = "Builtins" },
+  { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", desc = "Search current buffer" },
+  { "<leader>tbC", "<cmd>lua require('telescope.builtin').commands({})<cr>", desc = "Commands" },
+  { "<leader>tbF", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
+  { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>", desc = "Cursor grep" },
+  { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", desc = "Quickfix lists" },
+  { "<leader>tbb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
+  { "<leader>tbc", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, default_text = \".cpp$ | .hpp$ | 'meson.build \" })<cr>", desc = "C++ files" },
+  { "<leader>tbf", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "Find files" },
+  { "<leader>tbg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
+  { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>", desc = "Command history" },
+  { "<leader>tbj", "<cmd>lua require('telescope.builtin').jumplist({})<cr>", desc = "Jump list" },
+  { "<leader>tbl", "<cmd>lua require('telescope.builtin').loclist({})<cr>", desc = "Location list" },
+  { "<leader>tbm", "<cmd>lua require('telescope.builtin').marks({})<cr>", desc = "Marks" },
+  { "<leader>tbp", "<cmd>lua require('telescope.builtin').pickers({})<cr>", desc = "Pickers" },
+  { "<leader>tbq", "<cmd>lua require('telescope.builtin').quickfix({})<cr>", desc = "Quickfix" },
+  { "<leader>tbr", "<cmd>lua require('telescope.builtin').registers({})<cr>", desc = "Registers" },
+  { "<leader>tbs", "<cmd>lua require('telescope.builtin').colorscheme({})<cr>", desc = "Colorscheme" },
+  { "<leader>tbt", "<cmd>lua require('telescope.builtin').git_files({})<cr>", desc = "Find git files" },
+  { "<leader>tbv", "<cmd>lua require('telescope.builtin').vim_options({})<cr>", desc = "Vim options" },
+  { "<leader>tbz", "<cmd>lua require('telescope.builtin').spell_suggest({})<cr>", desc = "Spelling" },
+  { "<leader>tl", group = "LSP" },
+  { "<leader>tlC", "<cmd>lua require('telescope.builtin').lsp_outgoing_calls({})<cr>", desc = "Outgoing calls" },
+  { "<leader>tlW", "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({})<cr>", desc = "Dynamic workspace symbols" },
+  { "<leader>tlc", "<cmd>lua require('telescope.builtin').lsp_incoming_calls({})<cr>", desc = "Incoming calls" },
+  { "<leader>tld", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Definitions" },
+  { "<leader>tle", "<cmd>lua require('telescope.builtin').diagnositics({})<cr>", desc = "Diagnostics" },
+  { "<leader>tli", "<cmd>lua require('telescope.builtin').lsp_implementations({})<cr>", desc = "Implementations" },
+  { "<leader>tlr", "<cmd>lua require('telescope.builtin').lsp_references({})<cr>", desc = "References" },
+  { "<leader>tls", "<cmd>lua require('telescope.builtin').lsp_document_symbols({})<cr>", desc = "Document symbols" },
+  { "<leader>tlt", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Type Definitions" },
+  { "<leader>tlw", "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>", desc = "Workspace symbols" },
+  { "<leader>tt", "<cmd>lua require('telescope.builtin').treesitter({})<cr>", desc = "Treesitter" },
 })
 
 vim.cmd.colorscheme("gruvbox")
