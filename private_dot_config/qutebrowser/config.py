@@ -7,7 +7,7 @@ config.bind('c-h', 'scroll-page -0.5 0')
 config.bind('c-l', 'scroll-page 0.5 0')
 config.bind('h', 'tab-prev')
 config.bind('l', 'tab-next')
-config.bind('t', 'set-cmd-text -s :open -t')
+config.bind('t', 'cmd-set-text -s :open -t')
 
 #config.set('content.notifications.enabled', True, '*.slack.com')
 
