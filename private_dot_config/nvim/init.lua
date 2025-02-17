@@ -219,7 +219,8 @@ local caps = require('cmp_nvim_lsp').default_capabilities()
 
 require('lspconfig').clangd.setup({
   cmd = {
-    '/usr/llvm/19/bin/clangd',
+    -- '/usr/llvm/19/bin/clangd',
+    'clangd',
     -- IIUC, clangd doesn't recognize c++ as a compiler, so we have to
     -- whitelist it here to give clangd permission to run it and detect that
     -- it's actually gcc
