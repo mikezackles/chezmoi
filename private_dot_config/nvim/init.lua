@@ -27,13 +27,16 @@ require("lazy").setup({
   {
     "nvim-telescope/telescope.nvim", branch = '0.1.x',
     dependencies = {
+      "nvim-dap",
       "nvim-lua/plenary.nvim",
       "telescope-fzf-native.nvim",
+      "nvim-telescope/telescope-dap.nvim",
     },
     config = function(_, opts)
       local telescope = require('telescope')
       telescope.setup(opts)
       telescope.load_extension('fzf')
+      telescope.load_extension('dap')
     end,
   },
   {
@@ -212,6 +215,72 @@ require("lazy").setup({
       })
     end,
   },
+  { "mfussenegger/nvim-dap",
+    dependencies = {
+      "mason.nvim",
+      "jay-babu/mason-nvim-dap.nvim", -- simplified DAP server installation
+      "stevearc/overseer.nvim", -- task runner that supports .vscode/tasks.json
+    },
+    config = function ()
+      require("mason-nvim-dap").setup({
+        ensure_installed = { "cpptools" },
+      })
+      require("overseer").setup()
+      local dap = require("dap")
+      dap.adapters.gdb = {
+        type = "executable",
+        command = "gdb",
+        args = { "--interpreter=dap", "--eval-command", "set print pretty on" }
+      }
+      dap.adapters.cppdbg = {
+        id = 'cppdbg',
+        type = 'executable',
+        command = vim.fn.stdpath("data").."/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
+        options = { detached = false }
+      }
+      dap.configurations.cpp = {
+        -- Put the same data into inside launch.json under "configurations" for
+        -- each executable that can be debugged to get shortcuts
+        {
+          name = "Choose file to debug",
+          type = "cppdbg",
+          request = "launch",
+          program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+          end,
+          cwd = '${workspaceFolder}',
+          preLaunchTask = "Compile",
+          stopAtEntry = false,
+          setupCommands = {
+            {
+              text = '-enable-pretty-printing',
+              description =  'enable pretty printing',
+              ignoreFailures = false,
+            },
+          },
+        },
+        --{
+        --  name = 'Attach to gdbserver :1234',
+        --  type = 'cppdbg',
+        --  request = 'launch',
+        --  MIMode = 'gdb',
+        --  miDebuggerServerAddress = 'localhost:1234',
+        --  miDebuggerPath = '/usr/bin/gdb',
+        --  cwd = '${workspaceFolder}',
+        --  program = function()
+        --    return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+        --  end,
+        --  setupCommands = {
+        --    {
+        --      text = '-enable-pretty-printing',
+        --      description =  'enable pretty printing',
+        --      ignoreFailures = false,
+        --    },
+        --  },
+        --},
+      }
+    end,
+  },
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
@@ -334,7 +403,7 @@ require("which-key").add({
   { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>", desc = "Cursor grep" },
   { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", desc = "Quickfix lists" },
   { "<leader>tbb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
-  { "<leader>tbc", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, default_text = \".cpp$ | .hpp$ | 'meson.build \" })<cr>", desc = "C++ files" },
+  { "<leader>tbc", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, default_text = \".cpp$ | .hpp$ | .h$ | .c$ | 'meson.build | 'CMakeLists.txt \" })<cr>", desc = "C++ files" },
   { "<leader>tbf", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "Find files" },
   { "<leader>tbg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
   { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>", desc = "Command history" },
