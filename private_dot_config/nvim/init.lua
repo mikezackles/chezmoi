@@ -16,16 +16,14 @@ vim.g.mapleader = " " -- should be set before requiring lazy
 vim.g.bones_compat = 1 -- silliness to tell zenbones colorscheme we're not installing color picker plugin
 
 require("lazy").setup({
-  {
-    "folke/which-key.nvim",
+  { "folke/which-key.nvim",
     event = "VeryLazy",
     init = function()
       vim.o.timeout = true
       vim.o.timeoutlen = 300
     end,
   },
-  {
-    "nvim-telescope/telescope.nvim", branch = '0.1.x',
+  { "nvim-telescope/telescope.nvim", branch = '0.1.x',
     dependencies = {
       "nvim-dap",
       "nvim-lua/plenary.nvim",
@@ -39,15 +37,13 @@ require("lazy").setup({
       telescope.load_extension('dap')
     end,
   },
-  {
-    "nvim-telescope/telescope-fzf-native.nvim",
+  { "nvim-telescope/telescope-fzf-native.nvim",
     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
             'cmake --build build --config Release && ' ..
             'cmake --install build --prefix build',
   },
   { "nvim-tree/nvim-web-devicons" },
-  {
-    "nvim-treesitter/nvim-treesitter",
+  { "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     config = function ()
       require("nvim-treesitter.configs").setup({
@@ -68,8 +64,7 @@ require("lazy").setup({
       })
     end,
   },
-  {
-    "neovim/nvim-lspconfig",
+  { "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       --"neoconf.nvim",
@@ -82,20 +77,17 @@ require("lazy").setup({
   ----  "folke/neoconf.nvim", cmd = "Neoconf", config = true,
   ----  keys = { { "<leader>n", "<cmd>Neoconf<cr>", desc = "Neoconf: per-project LSP config" } },
   ----},
-  {
-    "williamboman/mason.nvim",
+  { "williamboman/mason.nvim",
     keys = { { "<leader>pm", "<cmd>Mason<cr>", desc = "Mason LSP package manager" } },
     config = true,
   },
-  {
-    "williamboman/mason-lspconfig.nvim",
+  { "williamboman/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" },
     opts = {
       ensure_installed = { "lua_ls" },
     },
   },
-  {
-    "hrsh7th/nvim-cmp",
+  { "hrsh7th/nvim-cmp",
     dependencies = {
       "LuaSnip",
       "hrsh7th/cmp-nvim-lsp",
@@ -181,15 +173,13 @@ require("lazy").setup({
       })
     end,
   },
-  {
-    "L3MON4D3/LuaSnip",
+  { "L3MON4D3/LuaSnip",
     version = "v2.*",
     build = "make install_jsregexp"
   },
   { "p00f/clangd_extensions.nvim" },
   -- indentation guides
-  {
-    "lukas-reineke/indent-blankline.nvim", main = "ibl",
+  { "lukas-reineke/indent-blankline.nvim", main = "ibl",
     config = function()
       require("ibl").setup({
         scope = {
@@ -215,9 +205,53 @@ require("lazy").setup({
       })
     end,
   },
-  { "mfussenegger/nvim-dap",
+  { "echasnovski/mini.pick",
+    config = function()
+      require('mini.pick').setup({
+        mappings = {
+          move_down = '<Tab>',
+          move_up = '<S-Tab>',
+        },
+      })
+    end,
+  },
+  --{ "folke/snacks.nvim", -- helpers for file picker etc.
+  --  lazy = false,
+  --  opts = {
+  --    picker = { enabled = true }
+  --  },
+  --},
+  --{ "ibhagwan/fzf-lua",
+  --  -- optional for icon support
+  --  dependencies = { "nvim-tree/nvim-web-devicons" },
+  --  -- or if using mini.icons/mini.nvim
+  --  -- dependencies = { "echasnovski/mini.icons" },
+  --  opts = {}
+  --},
+  { "mikavilpas/yazi.nvim",
+    dependencies = { "which-key.nvim" },
+    event = "VeryLazy",
+    opts = {
+      -- replace netrw
+      open_for_directories = true,
+      keymaps = {},
+    },
+    keys = {
+      { "<leader>yy", "<cmd>Yazi<cr>", desc = "Open yazi at current file" },
+      { "<leader>yw", "<cmd>Yazi cwd<cr>", desc = "Open yazi in nvim cwd" },
+      { "<leader>yt", "<cmd>Yazi toggle<cr>", desc = "Resume the last yazi session" },
+    },
+    init = function()
+      -- Needed because we are replacing netrw
+      -- See https://github.com/mikavilpas/yazi.nvim/issues/802
+      vim.g.loaded_netrwPlugin = 1
+    end
+  },
+  { "rcarriga/nvim-dap-ui",
     dependencies = {
       "mason.nvim",
+      "mfussenegger/nvim-dap",
+      "nvim-neotest/nvim-nio",
       "jay-babu/mason-nvim-dap.nvim", -- simplified DAP server installation
       "stevearc/overseer.nvim", -- task runner that supports .vscode/tasks.json
     },
@@ -238,6 +272,7 @@ require("lazy").setup({
         command = vim.fn.stdpath("data").."/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
         options = { detached = false }
       }
+      --local fzf = require('fzf-lua')
       dap.configurations.cpp = {
         -- Put the same data into inside launch.json under "configurations" for
         -- each executable that can be debugged to get shortcuts
@@ -246,7 +281,23 @@ require("lazy").setup({
           type = "cppdbg",
           request = "launch",
           program = function()
-            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+            --Snacks.picker.files({ cwd = vim.fn.getcwd(), desc = 'Select executable' })
+            --return require('telescope.builtin').find_files({
+            --  --find_command = {'fd', '--type', 'x'}
+            --  find_command = {'find', '.', '-executable', '-type', 'f'}
+            --})
+            --return coroutine.create(function(coro)
+            --  fzf.files({
+            --    prompt = 'Select executable> ',
+            --    cmd = 'find . -type f -executable -not -path "./.git/*"',
+            --    actions = {
+            --      ['default'] = function(selected)
+            --        coroutine.resume(coro, selected[1])
+            --      end
+            --    }
+            --  })
+            --end)
+            return './build/edit-distance'
           end,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
@@ -373,6 +424,63 @@ vim.api.nvim_create_autocmd('LspAttach', {
 --   end,
 -- })
 
+local curwd = nil
+local function changecwd(wd)
+  curwd = wd
+  vim.cmd("cd " .. vim.fn.fnameescape(wd ))
+  print("CWD changed to " .. wd)
+end
+
+function find_project()
+  local home = vim.loop.os_homedir()
+  local src = vim.fn.systemlist("cd " .. home .. " && fd '\\.git$' --max-depth 4 --unrestricted --prune | xargs dirname")
+  print(vim.inspect(src))
+  require('mini.pick').start({
+    window = { prompt_prefix = "Select project> " },
+    source = {
+      items = src,
+      choose = function(item)
+        local abspath = vim.fn.fnamemodify(home .. "/" .. item, ":p")
+        changecwd(abspath)
+      end,
+    },
+  })
+end
+
+-- This is for setting the cwd for neovim, usually to a project containing a
+-- .git directory. It can also move upwards so that you can move from a
+-- submodule to the parent directory.
+function setwd(always_up)
+  local anchor_names = {
+    '.git',
+  }
+  if always_up then
+    -- lazy way of detecting home directory
+    anchor_names[#anchor_names+1] = ".config"
+  end
+
+  -- If we've already set a working dir, start from the parent of the current
+  -- working directory. If we haven't, start from the current file's directory.
+  -- If the current file has no directory, start from the user's home
+  -- directory.
+  local path = (always_up and {curwd} or {nil})[1]
+  if path == nil then
+    path = vim.api.nvim_buf_get_name(0)
+    if path == '' then
+      changecwd(vim.loop.os_homedir())
+      return
+    end
+  end
+  path = vim.fs.dirname(path)
+
+  local anchor_file = vim.fs.find(anchor_names, { path = path, upward = true })[1]
+  if anchor_file == nil then
+    if always_up then changecwd("/") end
+  else
+    changecwd(vim.fs.dirname(anchor_file))
+  end
+end
+
 require("which-key").add({
   { "<leader> ", "<cmd>e #<cr>", desc = "Switch to most recent buffer" },
   { "<leader>b", group = "Buffers" },
@@ -395,6 +503,10 @@ require("which-key").add({
   { "<leader>qj", "<cmd>QNext<cr>", desc = "Next" },
   { "<leader>qk", "<cmd>QPrev<cr>", desc = "Previous" },
   { "<leader>qq", "<cmd>QFToggle!<cr>", desc = "Toggle QuickFix" },
+  { "<leader>r", group = "Project Root" },
+  { "<leader>rr", "<cmd>lua setwd(false)<cr>", desc = "Find project root" },
+  { "<leader>ru", "<cmd>lua setwd(true)<cr>", desc = "Move project root upward" },
+  { "<leader>rf", "<cmd>lua find_project()<cr>", desc = "Find project" },
   { "<leader>t", group = "Telescope" },
   { "<leader>tb", group = "Builtins" },
   { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", desc = "Search current buffer" },
@@ -429,10 +541,13 @@ require("which-key").add({
   { "<leader>tlt", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Type Definitions" },
   { "<leader>tlw", "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>", desc = "Workspace symbols" },
   { "<leader>tt", "<cmd>lua require('telescope.builtin').treesitter({})<cr>", desc = "Treesitter" },
+  { "<leader>y", group = "Yazi" },
 })
 
 vim.cmd.colorscheme("gruvbox")
 --vim.opt.background = "light"
+
+vim.opt.guifont = "Droid Sans Mono"
 
 -- Don't display a ridiculous number of completions
 vim.opt.pumheight = 10
@@ -445,6 +560,12 @@ vim.opt.softtabstop = 2
 
 -- Highlight the line the cursor is on
 vim.opt.cursorline = true
+
+-- nowrap
+vim.opt.wrap = false
+
+-- enable virtualedit mode
+vim.opt.virtualedit = "all"
 
 -- Use textwidth to mark character limit
 vim.opt.colorcolumn = "+1"
@@ -470,6 +591,10 @@ vim.keymap.set('n', '<leader>ft', '<cmd>set foldenable!<cr>', { desc = "Toggle" 
 -- Line numbers
 vim.opt.number = true
 
+-- Always use system clipboard (requires wl-clipboard on wayland)
+-- (See :h provider-clipboard)
+vim.opt.clipboard = "unnamedplus"
+
 vim.keymap.set('n', 'j', 'gj')
 vim.keymap.set('n', 'k', 'gk')
 vim.keymap.set('n', '0', 'g0')
@@ -480,6 +605,43 @@ vim.keymap.set('v', '0', 'g0')
 vim.keymap.set('v', '$', 'g$')
 vim.keymap.set('n', 'J', '<c-d>')
 vim.keymap.set('n', 'K', '<c-u>')
+vim.keymap.set('n', 'H', 'zH')
+vim.keymap.set('n', 'L', 'zL')
 vim.keymap.set('n', '<c-q>', 'q')
 vim.keymap.set('n', 'q', '<nop>')
 vim.keymap.set('n', '<esc>', ':noh<cr><esc>', { silent = true })
+-- make 0 go to the actual beginning of the line
+vim.keymap.set(
+  "n", "0",
+  function()
+    local row = vim.fn.line(".")
+    vim.api.nvim_win_set_cursor(0, { row, 0 })
+  end,
+  { noremap = true, silent = true }
+)
+-- Make $ behave like it does when not in virtualedit mode. (Honestly, who
+-- would ever want the other behavior?) This also tries to place the cursor on
+-- the right edge of the screen if we're moving horizontally backward.
+vim.keymap.set(
+  "n", "$",
+  function()
+    local win = vim.api.nvim_get_current_win()
+    local row, oldcol = unpack(vim.api.nvim_win_get_cursor(win))
+    vim.notify("row = " .. row .. ", oldcol = " .. oldcol)
+    local line = vim.fn.getline(row)
+    local newcol = #line - 1
+    vim.api.nvim_win_set_cursor(0, { row, newcol })
+
+    -- Place the cursor on the right edge of the screen if we're moving
+    -- horizontally backward. Note that in virtualedit vim returns the end of
+    -- the column as the position no matter where you are, so this could really
+    -- be ==.
+    if newcol <= oldcol then
+      local width = vim.api.nvim_win_get_width(win)
+      local view = vim.fn.winsaveview()
+      view.leftcol = math.max(newcol - width, 0)
+      vim.fn.winrestview(view)
+    end
+  end,
+  { noremap = true, silent = true }
+)
