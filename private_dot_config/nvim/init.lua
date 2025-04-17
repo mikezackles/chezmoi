@@ -30,9 +30,29 @@ require("lazy").setup({
       "telescope-fzf-native.nvim",
       "nvim-telescope/telescope-dap.nvim",
     },
-    config = function(_, opts)
+    config = function()
       local telescope = require('telescope')
-      telescope.setup(opts)
+      telescope.setup({
+        defaults = {
+          mappings = {
+            i = {
+              ["<Tab>"] = require('telescope.actions').move_selection_previous,
+              ["<S-Tab>"] = require('telescope.actions').move_selection_next,
+              ["<Space>"] = require('telescope.actions').toggle_selection,
+            },
+            n = {
+              ["<Tab>"] = require('telescope.actions').move_selection_previous,
+              ["<S-Tab>"] = require('telescope.actions').move_selection_next,
+              ["<Space>"] = require('telescope.actions').toggle_selection,
+            },
+          }
+        },
+        pickers = {
+          find_files = {
+            find_command = {"fd", "--type", "f", "--exclude", ".git"},
+          },
+        }
+      })
       telescope.load_extension('fzf')
       telescope.load_extension('dap')
     end,
@@ -205,31 +225,7 @@ require("lazy").setup({
       })
     end,
   },
-  { "echasnovski/mini.pick",
-    config = function()
-      require('mini.pick').setup({
-        mappings = {
-          move_down = '<Tab>',
-          move_up = '<S-Tab>',
-        },
-      })
-    end,
-  },
-  --{ "folke/snacks.nvim", -- helpers for file picker etc.
-  --  lazy = false,
-  --  opts = {
-  --    picker = { enabled = true }
-  --  },
-  --},
-  --{ "ibhagwan/fzf-lua",
-  --  -- optional for icon support
-  --  dependencies = { "nvim-tree/nvim-web-devicons" },
-  --  -- or if using mini.icons/mini.nvim
-  --  -- dependencies = { "echasnovski/mini.icons" },
-  --  opts = {}
-  --},
   { "mikavilpas/yazi.nvim",
-    dependencies = { "which-key.nvim" },
     event = "VeryLazy",
     opts = {
       -- replace netrw
@@ -246,6 +242,16 @@ require("lazy").setup({
       -- See https://github.com/mikavilpas/yazi.nvim/issues/802
       vim.g.loaded_netrwPlugin = 1
     end
+  },
+  { "rcarriga/nvim-notify",
+    event = "VeryLazy",
+    keys = {
+      { "<leader>md", "<cmd>lua vim.notify.dismiss()<cr>", desc = "Dismiss notifications" },
+    },
+    config = function()
+      vim.notify = require('notify')
+      vim.notify.setup({ timeout = 500 })
+    end,
   },
   { "rcarriga/nvim-dap-ui",
     dependencies = {
@@ -428,23 +434,37 @@ local curwd = nil
 local function changecwd(wd)
   curwd = wd
   vim.cmd("cd " .. vim.fn.fnameescape(wd ))
-  print("CWD changed to " .. wd)
+  vim.notify("CWD changed to " .. wd, vim.log.levels.INFO)
 end
 
 function find_project()
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+
   local home = vim.loop.os_homedir()
-  local src = vim.fn.systemlist("cd " .. home .. " && fd '\\.git$' --max-depth 4 --unrestricted --prune | xargs dirname")
-  print(vim.inspect(src))
-  require('mini.pick').start({
-    window = { prompt_prefix = "Select project> " },
-    source = {
-      items = src,
-      choose = function(item)
-        local abspath = vim.fn.fnamemodify(home .. "/" .. item, ":p")
+  local cmd = "fd --type d --max-depth 1"
+  local projects = vim.fn.fnamemodify(vim.loop.os_homedir() .. "/projects", ":p:h")
+  local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
+
+  pickers.new({}, {
+    prompt_title = "Select a Project",
+    finder = finders.new_table({
+      results = src,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr, map)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()[1]
+        local abspath = vim.fn.fnamemodify(home .. "/projects/" .. selection, ":p:h")
         changecwd(abspath)
-      end,
-    },
-  })
+      end)
+      return true
+    end,
+  }):find()
 end
 
 -- This is for setting the cwd for neovim, usually to a project containing a
@@ -474,9 +494,7 @@ function setwd(always_up)
   path = vim.fs.dirname(path)
 
   local anchor_file = vim.fs.find(anchor_names, { path = path, upward = true })[1]
-  if anchor_file == nil then
-    if always_up then changecwd("/") end
-  else
+  if anchor_file ~= nil then
     changecwd(vim.fs.dirname(anchor_file))
   end
 end
@@ -496,7 +514,15 @@ require("which-key").add({
   { "<leader>cp", "<cmd>colorscheme monokai_pro<cr>", desc = "Monokai Pro" },
   { "<leader>cr", "<cmd>colorscheme monokai_ristretto<cr>", desc = "Monokai Ristretto" },
   { "<leader>d", group = "Diagnostics" },
-  { "<leader>f", group = "Fold" },
+  { "<leader>f", group = "Find" },
+  { "<leader>fc", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .hpp$ | .h$ | .c$ \" })<cr>", desc = "C++ files" },
+  { "<leader>fs", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .c$ \" })<cr>", desc = "Source files" },
+  { "<leader>fh", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".hpp$ | .h$ \" })<cr>", desc = "Header files" },
+  { "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "Find files" },
+  { "<leader>fg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
+  { "<leader>fo", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
+  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
+  { "<leader>m", group = "Misc" },
   { "<leader>p", group = "Package Management" },
   { "<leader>q", group = "Quickfix/Location" },
   { "<leader>ql", "<cmd>LLToggle!<cr>", desc = "Toggle Location List" },
@@ -511,13 +537,9 @@ require("which-key").add({
   { "<leader>tb", group = "Builtins" },
   { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", desc = "Search current buffer" },
   { "<leader>tbC", "<cmd>lua require('telescope.builtin').commands({})<cr>", desc = "Commands" },
-  { "<leader>tbF", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
   { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>", desc = "Cursor grep" },
   { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", desc = "Quickfix lists" },
   { "<leader>tbb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
-  { "<leader>tbc", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, default_text = \".cpp$ | .hpp$ | .h$ | .c$ | 'meson.build | 'CMakeLists.txt \" })<cr>", desc = "C++ files" },
-  { "<leader>tbf", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "Find files" },
-  { "<leader>tbg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
   { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>", desc = "Command history" },
   { "<leader>tbj", "<cmd>lua require('telescope.builtin').jumplist({})<cr>", desc = "Jump list" },
   { "<leader>tbl", "<cmd>lua require('telescope.builtin').loclist({})<cr>", desc = "Location list" },
@@ -586,7 +608,7 @@ vim.opt.list = true
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- disable fold at startup
-vim.keymap.set('n', '<leader>ft', '<cmd>set foldenable!<cr>', { desc = "Toggle" })
+vim.keymap.set('n', '<leader>mt', '<cmd>set foldenable!<cr>', { desc = "Toggle Folding" })
 
 -- Line numbers
 vim.opt.number = true
@@ -645,3 +667,9 @@ vim.keymap.set(
   end,
   { noremap = true, silent = true }
 )
+
+if vim.g.neovide then
+  vim.defer_fn(function()
+    vim.cmd("redraw!")
+  end, 100)
+end
