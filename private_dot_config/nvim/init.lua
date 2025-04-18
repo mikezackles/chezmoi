@@ -23,9 +23,13 @@ require("lazy").setup({
       vim.o.timeoutlen = 300
     end,
   },
+  { "nvim-telescope/telescope-fzf-native.nvim",
+    build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
+            'cmake --build build --config Release && ' ..
+            'cmake --install build --prefix build',
+  },
   { "nvim-telescope/telescope.nvim", branch = '0.1.x',
     dependencies = {
-      "nvim-dap",
       "nvim-lua/plenary.nvim",
       "telescope-fzf-native.nvim",
       "nvim-telescope/telescope-dap.nvim",
@@ -55,12 +59,39 @@ require("lazy").setup({
       })
       telescope.load_extension('fzf')
       telescope.load_extension('dap')
+
+      function async_picker(src, callback)
+        local pickers = require("telescope.pickers")
+        local finders = require("telescope.finders")
+        local conf = require("telescope.config").values
+        local actions = require("telescope.actions")
+        local action_state = require("telescope.actions.state")
+
+        pickers.new({}, {
+          prompt_title = "Choose an executable",
+          finder = finders.new_table({
+            results = src,
+          }),
+          sorter = conf.generic_sorter({}),
+          attach_mappings = function(prompt_bufnr, map)
+            actions.select_default:replace(function()
+              actions.close(prompt_bufnr)
+              local selection = action_state.get_selected_entry()[1]
+              callback(selection)
+            end)
+            return true
+          end,
+        }):find()
+      end
+
+      function sync_picker(src)
+        local coro = coroutine.running()
+        async_picker(src, function(selection)
+          coroutine.resume(coro, selection)
+        end)
+        return coroutine.yield()
+      end
     end,
-  },
-  { "nvim-telescope/telescope-fzf-native.nvim",
-    build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
-            'cmake --build build --config Release && ' ..
-            'cmake --install build --prefix build',
   },
   { "nvim-tree/nvim-web-devicons" },
   { "nvim-treesitter/nvim-treesitter",
@@ -250,20 +281,38 @@ require("lazy").setup({
     },
     config = function()
       vim.notify = require('notify')
-      vim.notify.setup({ timeout = 500 })
+      vim.notify.setup({
+        timeout = 200,
+        background_colour = "#000000",
+      })
     end,
   },
-  { "rcarriga/nvim-dap-ui",
+  { "mfussenegger/nvim-dap",
     dependencies = {
       "mason.nvim",
-      "mfussenegger/nvim-dap",
+      "telescope.nvim",
+      "theHamsta/nvim-dap-virtual-text",
       "nvim-neotest/nvim-nio",
       "jay-babu/mason-nvim-dap.nvim", -- simplified DAP server installation
       "stevearc/overseer.nvim", -- task runner that supports .vscode/tasks.json
     },
+    keys = {
+      { "<leader>bb", "<cmd>DapToggleBreakpoint<cr>", desc = "Toggle Breakpoint" },
+      { "<leader>bc", "<cmd>DapContinue<cr>", desc = "Continue" },
+      { "<leader>bn", "<cmd>DapStepOver<cr>", desc = "Step Over" },
+      { "<leader>bs", "<cmd>DapStepInto<cr>", desc = "Step Into" },
+      { "<leader>bo", "<cmd>DapStepOut<cr>", desc = "Step Out" },
+      { "<leader>bv", "<cmd>DapVirtualTextToggle<cr>", desc = "Toggle Virtual Text" },
+      { "<leader>bp", "<cmd>DapPause<cr>", desc = "Pause" },
+      { "<leader>bh", "<cmd>lua require('dap.ui.widgets').hover()<cr>", desc = "Pause" },
+      { "<leader>bp", "<cmd>lua scopes.toggle()<cr>", desc = "Toggle Scopes" },
+      { "<leader>bf", "<cmd>lua frames.toggle()<cr>", desc = "Toggle Frames" },
+      { "<leader>be", "<cmd>lua expression.toggle()<cr>", desc = "Toggle Expression" },
+      { "<leader>bt", "<cmd>lua threads.toggle()<cr>", desc = "Toggle Threads" },
+    },
     config = function ()
       require("mason-nvim-dap").setup({
-        ensure_installed = { "cpptools" },
+        ensure_installed = { "cpptools", "codelldb" },
       })
       require("overseer").setup()
       local dap = require("dap")
@@ -278,32 +327,24 @@ require("lazy").setup({
         command = vim.fn.stdpath("data").."/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
         options = { detached = false }
       }
+      dap.adapters.codelldb = {
+        type = 'executable',
+        command = 'codelldb',
+        -- uncomment on windows
+        -- detached = false,
+      }
       --local fzf = require('fzf-lua')
       dap.configurations.cpp = {
         -- Put the same data into inside launch.json under "configurations" for
         -- each executable that can be debugged to get shortcuts
         {
-          name = "Choose file to debug",
+          name = "cppdbg",
           type = "cppdbg",
           request = "launch",
           program = function()
-            --Snacks.picker.files({ cwd = vim.fn.getcwd(), desc = 'Select executable' })
-            --return require('telescope.builtin').find_files({
-            --  --find_command = {'fd', '--type', 'x'}
-            --  find_command = {'find', '.', '-executable', '-type', 'f'}
-            --})
-            --return coroutine.create(function(coro)
-            --  fzf.files({
-            --    prompt = 'Select executable> ',
-            --    cmd = 'find . -type f -executable -not -path "./.git/*"',
-            --    actions = {
-            --      ['default'] = function(selected)
-            --        coroutine.resume(coro, selected[1])
-            --      end
-            --    }
-            --  })
-            --end)
-            return './build/edit-distance'
+            local home = vim.loop.os_homedir()
+            local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
+            return sync_picker(vim.fn.systemlist(cmd))
           end,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
@@ -315,6 +356,19 @@ require("lazy").setup({
               ignoreFailures = false,
             },
           },
+        },
+        {
+          name = "codelldb",
+          type = "codelldb",
+          request = "launch",
+          program = function()
+            local home = vim.loop.os_homedir()
+            local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
+            return sync_picker(vim.fn.systemlist(cmd))
+          end,
+          cwd = '${workspaceFolder}',
+          preLaunchTask = "Compile",
+          stopOnEntry = false,
         },
         --{
         --  name = 'Attach to gdbserver :1234',
@@ -336,6 +390,72 @@ require("lazy").setup({
         --  },
         --},
       }
+      dap.configurations.c = dap.configurations.cpp
+      --dap.configurations.rust = dap.configurations.cpp
+      dap.defaults.fallback.terminal_win_cmd = function()
+        return vim.api.nvim_create_buf(false, true)
+      end
+      require('nvim-dap-virtual-text').setup({
+        virt_text_pos = 'eol'
+      })
+      dap.listeners.after.event_initialized['widget_setup'] = function()
+        local widgets = require('dap.ui.widgets')
+        scopes = widgets.sidebar(widgets.scopes, { height = 10 }, 'belowright split')
+        scopes.open()
+        frames = widgets.centered_float(widgets.frames)
+        frames.close()
+        expression = widgets.centered_float(widgets.expression)
+        expression.close()
+        threads = widgets.centered_float(widgets.threads)
+        threads.close()
+      end
+
+      local function close_widgets()
+        scopes.close()
+        frames.close()
+        expression.close()
+        threads.close()
+      end
+      dap.listeners.before.event_terminated['widget_setup'] = close_widgets
+      dap.listeners.before.event_exited['widget_setup'] = close_widgets
+
+      local saved_map = {}
+      local debug_map = {
+        n = dap.step_over,
+        s = dap.step_into,
+        u = dap.up,
+        d = dap.down,
+        c = dap.continue,
+        p = dap.pause,
+        f = dap.step_out,
+      }
+      local function restore_mappings()
+        for key, mapping in pairs(saved_map) do
+          if #mapping == 0 then
+            vim.keymap.del('n', key)
+          else
+            vim.fn.mapset(mapping)
+          end
+        end
+      end
+      debug_map['q'] = function()
+        dap.disconnect(nil, function()
+          close_widgets()
+          restore_mappings()
+        end)
+      end
+      dap.listeners.after.event_initialized['keys'] = function()
+        local dap = require('dap')
+        saved_map = {}
+        for key, _ in pairs(debug_map) do
+          saved_map[key] = vim.fn.maparg(key, 'n', false, true)
+        end
+        for key, fun in pairs(debug_map) do
+          vim.keymap.set("n", key, fun)
+        end
+      end
+      dap.listeners.before.event_terminated['keys'] = restore_mappings
+      dap.listeners.before.event_exited['keys'] = restore_mappings
     end,
   },
 })
@@ -438,33 +558,15 @@ local function changecwd(wd)
 end
 
 function find_project()
-  local pickers = require("telescope.pickers")
-  local finders = require("telescope.finders")
-  local conf = require("telescope.config").values
-  local actions = require("telescope.actions")
-  local action_state = require("telescope.actions.state")
-
-  local home = vim.loop.os_homedir()
   local cmd = "fd --type d --max-depth 1"
-  local projects = vim.fn.fnamemodify(vim.loop.os_homedir() .. "/projects", ":p:h")
+  local home = vim.loop.os_homedir()
+  local projects = vim.fn.fnamemodify(home .. "/projects", ":p:h")
   local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
-
-  pickers.new({}, {
-    prompt_title = "Select a Project",
-    finder = finders.new_table({
-      results = src,
-    }),
-    sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr, map)
-      actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
-        local selection = action_state.get_selected_entry()[1]
-        local abspath = vim.fn.fnamemodify(home .. "/projects/" .. selection, ":p:h")
-        changecwd(abspath)
-      end)
-      return true
-    end,
-  }):find()
+  async_picker(src, function(selection)
+    local abspath = vim.fn.fnamemodify(home .. "/projects/" .. selection, ":p:h")
+    changecwd(abspath)
+    require('telescope.builtin').find_files({ hidden = true })
+  end)
 end
 
 -- This is for setting the cwd for neovim, usually to a project containing a
@@ -501,9 +603,7 @@ end
 
 require("which-key").add({
   { "<leader> ", "<cmd>e #<cr>", desc = "Switch to most recent buffer" },
-  { "<leader>b", group = "Buffers" },
-  { "<leader>bn", "<cmd>bnext<cr>", desc = "Next" },
-  { "<leader>bp", "<cmd>bprevious<cr>", desc = "Previous" },
+  { "<leader>b", group = "Debugger" },
   { "<leader>c", group = "Colors" },
   { "<leader>cb", "<cmd>exec &bg=='light'? 'set bg=dark' : 'set bg=light'<cr>", desc = "Toggle light/dark background" },
   { "<leader>cd", "<cmd>colorscheme rose-pine-dawn<cr>", desc = "Rose Pine Dawn" },
@@ -649,7 +749,6 @@ vim.keymap.set(
   function()
     local win = vim.api.nvim_get_current_win()
     local row, oldcol = unpack(vim.api.nvim_win_get_cursor(win))
-    vim.notify("row = " .. row .. ", oldcol = " .. oldcol)
     local line = vim.fn.getline(row)
     local newcol = #line - 1
     vim.api.nvim_win_set_cursor(0, { row, newcol })
