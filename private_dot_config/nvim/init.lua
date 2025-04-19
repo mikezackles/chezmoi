@@ -60,7 +60,7 @@ require("lazy").setup({
       telescope.load_extension('fzf')
       telescope.load_extension('dap')
 
-      function async_picker(src, callback)
+      function async_picker(prompt, src, callback)
         local pickers = require("telescope.pickers")
         local finders = require("telescope.finders")
         local conf = require("telescope.config").values
@@ -68,7 +68,7 @@ require("lazy").setup({
         local action_state = require("telescope.actions.state")
 
         pickers.new({}, {
-          prompt_title = "Choose an executable",
+          prompt_title = prompt,
           finder = finders.new_table({
             results = src,
           }),
@@ -84,9 +84,9 @@ require("lazy").setup({
         }):find()
       end
 
-      function sync_picker(src)
+      function sync_picker(prompt, src)
         local coro = coroutine.running()
-        async_picker(src, function(selection)
+        async_picker(prompt, src, function(selection)
           coroutine.resume(coro, selection)
         end)
         return coroutine.yield()
@@ -230,16 +230,16 @@ require("lazy").setup({
   },
   { "p00f/clangd_extensions.nvim" },
   -- indentation guides
-  { "lukas-reineke/indent-blankline.nvim", main = "ibl",
-    config = function()
-      require("ibl").setup({
-        scope = {
-          show_start = false,
-          show_end = false,
-        },
-      })
-    end,
-  },
+  --{ "lukas-reineke/indent-blankline.nvim", main = "ibl",
+  --  config = function()
+  --    require("ibl").setup({
+  --      scope = {
+  --        show_start = false,
+  --        show_end = false,
+  --      },
+  --    })
+  --  end,
+  --},
   -- colorschemes
   { "ellisonleao/gruvbox.nvim", priority = 1000, config = true },
   { "rose-pine/neovim", priority = 1000 },
@@ -298,17 +298,19 @@ require("lazy").setup({
     },
     keys = {
       { "<leader>bb", "<cmd>DapToggleBreakpoint<cr>", desc = "Toggle Breakpoint" },
+      { "<leader>bd", "<cmd>DapClearBreakpoints<cr>", desc = "Clear Breakpoints" },
       { "<leader>bc", "<cmd>DapContinue<cr>", desc = "Continue" },
-      { "<leader>bn", "<cmd>DapStepOver<cr>", desc = "Step Over" },
-      { "<leader>bs", "<cmd>DapStepInto<cr>", desc = "Step Into" },
-      { "<leader>bo", "<cmd>DapStepOut<cr>", desc = "Step Out" },
+      --{ "<leader>bn", "<cmd>DapStepOver<cr>", desc = "Step Over" },
+      --{ "<leader>bs", "<cmd>DapStepInto<cr>", desc = "Step Into" },
+      --{ "<leader>bo", "<cmd>DapStepOut<cr>", desc = "Step Out" },
       { "<leader>bv", "<cmd>DapVirtualTextToggle<cr>", desc = "Toggle Virtual Text" },
-      { "<leader>bp", "<cmd>DapPause<cr>", desc = "Pause" },
-      { "<leader>bh", "<cmd>lua require('dap.ui.widgets').hover()<cr>", desc = "Pause" },
-      { "<leader>bp", "<cmd>lua scopes.toggle()<cr>", desc = "Toggle Scopes" },
-      { "<leader>bf", "<cmd>lua frames.toggle()<cr>", desc = "Toggle Frames" },
-      { "<leader>be", "<cmd>lua expression.toggle()<cr>", desc = "Toggle Expression" },
-      { "<leader>bt", "<cmd>lua threads.toggle()<cr>", desc = "Toggle Threads" },
+      --{ "<leader>bp", "<cmd>DapPause<cr>", desc = "Pause" },
+      -- Hover is kinda painful to use due to the API
+      --{ "<leader>bh", "<cmd>lua dap_hover = require('dap').hover()<cr>", desc = "Hover" },
+      { "<leader>bp", "<cmd>lua if dap_scopes then dap_scopes.toggle() end<cr>", desc = "Toggle Scopes" },
+      { "<leader>bf", "<cmd>lua if dap_frames then dap_frames.toggle() end<cr>", desc = "Toggle Frames" },
+      { "<leader>be", "<cmd>lua if dap_expression then dap_expression.toggle() end<cr>", desc = "Toggle Expression" },
+      { "<leader>bt", "<cmd>lua if dap_threads then dap_threads.toggle()< endcr>", desc = "Toggle Threads" },
     },
     config = function ()
       require("mason-nvim-dap").setup({
@@ -316,11 +318,6 @@ require("lazy").setup({
       })
       require("overseer").setup()
       local dap = require("dap")
-      dap.adapters.gdb = {
-        type = "executable",
-        command = "gdb",
-        args = { "--interpreter=dap", "--eval-command", "set print pretty on" }
-      }
       dap.adapters.cppdbg = {
         id = 'cppdbg',
         type = 'executable',
@@ -333,7 +330,25 @@ require("lazy").setup({
         -- uncomment on windows
         -- detached = false,
       }
-      --local fzf = require('fzf-lua')
+      dap.adapters.gdb = {
+        type = "executable",
+        command = "gdb",
+        args = { "--interpreter=dap", "--eval-command", "set print pretty on" }
+      }
+      dap.adapters.lldb = {
+        type = "executable",
+        command = "lldb-dap",
+      }
+      local function exe_picker()
+        local home = vim.loop.os_homedir()
+        local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
+        return sync_picker("Choose an executable", vim.fn.systemlist(cmd))
+      end
+      local function pid_picker()
+        local cmd = "ps -u \"$USER\" -o ppid=,pid=,args= | awk '$1 == 1 { $1=\"\"; print substr($0,2) }'"
+        local selection = sync_picker("Choose a process", vim.fn.systemlist(cmd))
+        return selection:match("^(%d+)")
+      end
       dap.configurations.cpp = {
         -- Put the same data into inside launch.json under "configurations" for
         -- each executable that can be debugged to get shortcuts
@@ -341,11 +356,7 @@ require("lazy").setup({
           name = "cppdbg",
           type = "cppdbg",
           request = "launch",
-          program = function()
-            local home = vim.loop.os_homedir()
-            local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
-            return sync_picker(vim.fn.systemlist(cmd))
-          end,
+          program = exe_picker,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopAtEntry = false,
@@ -361,11 +372,7 @@ require("lazy").setup({
           name = "codelldb",
           type = "codelldb",
           request = "launch",
-          program = function()
-            local home = vim.loop.os_homedir()
-            local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
-            return sync_picker(vim.fn.systemlist(cmd))
-          end,
+          program = exe_picker,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopOnEntry = false,
@@ -389,6 +396,42 @@ require("lazy").setup({
         --    },
         --  },
         --},
+        {
+          name = "gdb",
+          type = "gdb",
+          request = "launch",
+          program = exe_picker,
+          cwd = "${workspaceFolder}",
+          preLaunchTask = "Compile",
+          stopAtBeginningOfMainSubprogram = false,
+        },
+        {
+          name = "gdb attach to process",
+          type = "gdb",
+          request = "attach",
+          program = exe_picker,
+          pid = pid_picker,
+          cwd = '${workspaceFolder}'
+        },
+        --{
+        --  name = 'gdb attach to server',
+        --  type = 'gdb',
+        --  request = 'attach',
+        --  target = 'localhost:1234',
+        --  program = function()
+        --     return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+        --  end,
+        --  cwd = '${workspaceFolder}'
+        --},
+        {
+          name = "lldb",
+          type = "lldb",
+          request = "launch",
+          program = exe_picker,
+          cwd = '${workspaceFolder}',
+          preLaunchTask = "Compile",
+          stopOnEntry = false,
+        },
       }
       dap.configurations.c = dap.configurations.cpp
       --dap.configurations.rust = dap.configurations.cpp
@@ -400,27 +443,29 @@ require("lazy").setup({
       })
       dap.listeners.after.event_initialized['widget_setup'] = function()
         local widgets = require('dap.ui.widgets')
-        scopes = widgets.sidebar(widgets.scopes, { height = 10 }, 'belowright split')
-        scopes.open()
-        frames = widgets.centered_float(widgets.frames)
-        frames.close()
-        expression = widgets.centered_float(widgets.expression)
-        expression.close()
-        threads = widgets.centered_float(widgets.threads)
-        threads.close()
+        dap_scopes = widgets.sidebar(widgets.scopes, { height = 10 }, 'belowright split')
+        dap_scopes.open()
+        dap_frames = widgets.centered_float(widgets.frames)
+        dap_frames.close()
+        dap_expression = widgets.centered_float(widgets.expression)
+        dap_expression.close()
+        dap_threads = widgets.centered_float(widgets.threads)
+        dap_threads.close()
       end
 
       local function close_widgets()
-        scopes.close()
-        frames.close()
-        expression.close()
-        threads.close()
+        if dap_scopes then dap_scopes.close() end
+        if dap_frames then dap_frames.close() end
+        if dap_expression then dap_expression.close() end
+        if dap_threads then dap_threads.close() end
+        --if dap_hover then dap_hover.close() end
       end
       dap.listeners.before.event_terminated['widget_setup'] = close_widgets
       dap.listeners.before.event_exited['widget_setup'] = close_widgets
 
       local saved_map = {}
       local debug_map = {
+        b = dap.toggle_breakpoint,
         n = dap.step_over,
         s = dap.step_into,
         u = dap.up,
@@ -428,11 +473,14 @@ require("lazy").setup({
         c = dap.continue,
         p = dap.pause,
         f = dap.step_out,
+        x = dap.run_to_cursor,
       }
       local function restore_mappings()
         for key, mapping in pairs(saved_map) do
           if #mapping == 0 then
-            vim.keymap.del('n', key)
+            -- if it's empty, there was no mapping before, so we need to delete
+            -- the mapping. Use pcall to swallow any errors.
+            pcall(vim.keymap.del, 'n', key)
           else
             vim.fn.mapset(mapping)
           end
@@ -562,7 +610,7 @@ function find_project()
   local home = vim.loop.os_homedir()
   local projects = vim.fn.fnamemodify(home .. "/projects", ":p:h")
   local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
-  async_picker(src, function(selection)
+  async_picker("Choose a project", src, function(selection)
     local abspath = vim.fn.fnamemodify(home .. "/projects/" .. selection, ":p:h")
     changecwd(abspath)
     require('telescope.builtin').find_files({ hidden = true })
