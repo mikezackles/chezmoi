@@ -22,6 +22,11 @@ require("lazy").setup({
       vim.o.timeout = true
       vim.o.timeoutlen = 300
     end,
+    config = function()
+      require('which-key').setup({
+        preset = 'helix',
+      })
+    end,
   },
   { "nvim-telescope/telescope-fzf-native.nvim",
     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
@@ -479,12 +484,13 @@ require("lazy").setup({
         for key, mapping in pairs(saved_map) do
           if #mapping == 0 then
             -- if it's empty, there was no mapping before, so we need to delete
-            -- the mapping. Use pcall to swallow any errors.
-            pcall(vim.keymap.del, 'n', key)
+            -- the mapping
+            vim.keymap.del('n', key)
           else
             vim.fn.mapset(mapping)
           end
         end
+        saved_map = {}
       end
       debug_map['q'] = function()
         dap.disconnect(nil, function()
@@ -781,42 +787,37 @@ vim.keymap.set('n', '<c-q>', 'q')
 vim.keymap.set('n', 'q', '<nop>')
 vim.keymap.set('n', '<esc>', ':noh<cr><esc>', { silent = true })
 -- make 0 go to the actual beginning of the line
-vim.keymap.set(
-  "n", "0",
-  function()
-    local row = vim.fn.line(".")
-    vim.api.nvim_win_set_cursor(0, { row, 0 })
-  end,
-  { noremap = true, silent = true }
-)
+local function go_linestart()
+  local row = vim.fn.line(".")
+  vim.api.nvim_win_set_cursor(0, { row, 0 })
+end
+vim.keymap.set("n", "0", go_linestart)
+vim.keymap.set("v", "0", go_linestart)
 -- Make $ behave like it does when not in virtualedit mode. (Honestly, who
 -- would ever want the other behavior?) This also tries to place the cursor on
 -- the right edge of the screen if we're moving horizontally backward.
-vim.keymap.set(
-  "n", "$",
-  function()
-    local win = vim.api.nvim_get_current_win()
-    local row, oldcol = unpack(vim.api.nvim_win_get_cursor(win))
-    local line = vim.fn.getline(row)
-    local newcol = #line - 1
-    vim.api.nvim_win_set_cursor(0, { row, newcol })
+local function go_eol()
+  local win = vim.api.nvim_get_current_win()
+  local row, oldcol = unpack(vim.api.nvim_win_get_cursor(win))
+  local line = vim.fn.getline(row)
+  local newcol = #line - 1
+  vim.api.nvim_win_set_cursor(0, { row, newcol })
 
-    -- Place the cursor on the right edge of the screen if we're moving
-    -- horizontally backward. Note that in virtualedit vim returns the end of
-    -- the column as the position no matter where you are, so this could really
-    -- be ==.
-    if newcol <= oldcol then
-      local width = vim.api.nvim_win_get_width(win)
-      local view = vim.fn.winsaveview()
-      view.leftcol = math.max(newcol - width, 0)
-      vim.fn.winrestview(view)
-    end
-  end,
-  { noremap = true, silent = true }
-)
+  -- Place the cursor on the right edge of the screen if we're moving
+  -- horizontally backward. Note that in virtualedit vim returns the end of
+  -- the column as the position no matter where you are, so this could really
+  -- be ==.
+  if newcol <= oldcol then
+    local width = vim.api.nvim_win_get_width(win)
+    local view = vim.fn.winsaveview()
+    view.leftcol = math.max(newcol - width, 0)
+    vim.fn.winrestview(view)
+  end
+end
+vim.keymap.set("n", "$", go_eol)
+vim.keymap.set("v", "$", go_eol)
 
-if vim.g.neovide then
-  vim.defer_fn(function()
-    vim.cmd("redraw!")
-  end, 100)
+function RELOAD(mod)
+  package.loaded[mod] = nil
+  return require(mod)
 end
