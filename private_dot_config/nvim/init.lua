@@ -512,6 +512,14 @@ require("lazy").setup({
       dap.listeners.before.event_exited['keys'] = restore_mappings
     end,
   },
+  { 'smoka7/hop.nvim',
+    keys = {
+      { "<leader>h", "<cmd>HopWord<cr>", desc = "Hop Word" }
+    },
+    config = function()
+      require('hop').setup({})
+    end,
+  },
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
