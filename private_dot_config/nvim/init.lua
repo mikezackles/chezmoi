@@ -520,6 +520,17 @@ require("lazy").setup({
       require('hop').setup({})
     end,
   },
+  { 'stevearc/aerial.nvim',
+    keys = {
+      { "<leader>a", "<cmd>AerialToggle<cr>", desc = "Toggle Aerial" }
+    },
+    config = function()
+      require('aerial').setup({
+        -- prioritize lsp over treesitter
+        backends = { 'lsp', 'treesitter', 'markdown', 'asciidoc', 'man' },
+      })
+    end
+  },
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
@@ -582,6 +593,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     try_map_keys('<leader>lr', vim.lsp.buf.references, 'References')
     try_map_keys('<leader>ls', vim.lsp.buf.signature_help, 'Signature help')
     try_map_keys('<leader>lR', vim.lsp.buf.rename, 'Rename')
+    try_map_keys('<leader>ln', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled()) end, 'Toggle inlay hints')
     if vim.lsp.buf.format ~= nil then
       -- NOTE: Editing buffer while formatting asynchronously "can lead to unexpected changes"
       map_keys('<leader>lf', function() vim.lsp.buf.format({async = true}) end, 'Format buffer')
@@ -595,10 +607,10 @@ vim.api.nvim_create_autocmd('LspAttach', {
     local client = vim.lsp.get_client_by_id(event.data.client_id)
     if client.name == 'clangd' then
       map_keys('<leader>lt', vim.cmd.ClangdSwitchSourceHeader, 'Toggle between source and header')
-      map_keys('<leader>ln', vim.cmd.ClangdToggleInlayHints, 'Toggle inlay hints')
       map_keys('<leader>lI', vim.cmd.ClangdSymbolInfo, 'Symbol Info')
       map_keys('<leader>lm', vim.cmd.ClangdMemoryUsage, 'Memory Usage')
       map_keys('<leader>lx', vim.cmd.ClangdAST, 'AST')
+      map_keys('<leader>ly', vim.cmd.ClangdTypeHierarchy, 'Type Hierarchy')
     end
   end,
 })
