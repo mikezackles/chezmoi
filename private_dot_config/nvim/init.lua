@@ -528,6 +528,14 @@ require("lazy").setup({
       require('aerial').setup({
         -- prioritize lsp over treesitter
         backends = { 'lsp', 'treesitter', 'markdown', 'asciidoc', 'man' },
+        layout = {
+          max_width = { 0.5 },
+        },
+        close_on_select = true,
+        autojump = true,
+        on_attach = function(bufnr)
+          vim.keymap.set("n", "q", "<cmd>AerialClose<CR>", { buffer = bufnr })
+        end,
       })
     end
   },
