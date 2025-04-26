@@ -47,7 +47,6 @@ require("lazy").setup({
             i = {
               ["<Tab>"] = require('telescope.actions').move_selection_previous,
               ["<S-Tab>"] = require('telescope.actions').move_selection_next,
-              ["<Space>"] = require('telescope.actions').toggle_selection,
             },
             n = {
               ["<Tab>"] = require('telescope.actions').move_selection_previous,
@@ -305,6 +304,7 @@ require("lazy").setup({
       { "<leader>bb", "<cmd>DapToggleBreakpoint<cr>", desc = "Toggle Breakpoint" },
       { "<leader>bd", "<cmd>DapClearBreakpoints<cr>", desc = "Clear Breakpoints" },
       { "<leader>bc", "<cmd>DapContinue<cr>", desc = "Continue" },
+      { "<leader>br", "<cmd>lua require('dap').repl.toggle({ height = 10 })<cr>", desc = "Toggle REPL" },
       --{ "<leader>bn", "<cmd>DapStepOver<cr>", desc = "Step Over" },
       --{ "<leader>bs", "<cmd>DapStepInto<cr>", desc = "Step Into" },
       --{ "<leader>bo", "<cmd>DapStepOut<cr>", desc = "Step Out" },
@@ -315,7 +315,7 @@ require("lazy").setup({
       { "<leader>bp", "<cmd>lua if dap_scopes then dap_scopes.toggle() end<cr>", desc = "Toggle Scopes" },
       { "<leader>bf", "<cmd>lua if dap_frames then dap_frames.toggle() end<cr>", desc = "Toggle Frames" },
       { "<leader>be", "<cmd>lua if dap_expression then dap_expression.toggle() end<cr>", desc = "Toggle Expression" },
-      { "<leader>bt", "<cmd>lua if dap_threads then dap_threads.toggle()< endcr>", desc = "Toggle Threads" },
+      { "<leader>bt", "<cmd>lua if dap_threads then dap_threads.toggle() end<cr>", desc = "Toggle Threads" },
     },
     config = function ()
       require("mason-nvim-dap").setup({
@@ -346,8 +346,11 @@ require("lazy").setup({
       }
       local function exe_picker()
         local home = vim.loop.os_homedir()
-        local cmd = "fd --type executable --max-depth 4 --no-ignore --full-path '/build.*'"
+        local cmd = "fd --type executable --max-depth 6 --no-ignore --full-path '/build.*'"
         return sync_picker("Choose an executable", vim.fn.systemlist(cmd))
+      end
+      local function args_picker()
+        return vim.fn.input('Extra args: ')
       end
       local function pid_picker()
         local cmd = "ps -u \"$USER\" -o ppid=,pid=,args= | awk '$1 == 1 { $1=\"\"; print substr($0,2) }'"
@@ -362,6 +365,7 @@ require("lazy").setup({
           type = "cppdbg",
           request = "launch",
           program = exe_picker,
+          args = args_picker,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopAtEntry = false,
@@ -378,6 +382,7 @@ require("lazy").setup({
           type = "codelldb",
           request = "launch",
           program = exe_picker,
+          args = args_picker,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopOnEntry = false,
@@ -406,6 +411,7 @@ require("lazy").setup({
           type = "gdb",
           request = "launch",
           program = exe_picker,
+          args = args_picker,
           cwd = "${workspaceFolder}",
           preLaunchTask = "Compile",
           stopAtBeginningOfMainSubprogram = false,
@@ -433,6 +439,7 @@ require("lazy").setup({
           type = "lldb",
           request = "launch",
           program = exe_picker,
+          args = args_picker,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopOnEntry = false,
@@ -448,6 +455,7 @@ require("lazy").setup({
       })
       dap.listeners.after.event_initialized['widget_setup'] = function()
         local widgets = require('dap.ui.widgets')
+        dap_hover = nil
         dap_scopes = widgets.sidebar(widgets.scopes, { height = 10 }, 'belowright split')
         dap_scopes.open()
         dap_frames = widgets.centered_float(widgets.frames)
@@ -459,12 +467,14 @@ require("lazy").setup({
       end
 
       local function close_widgets()
+        dap.repl.close()
         if dap_scopes then dap_scopes.close() end
         if dap_frames then dap_frames.close() end
         if dap_expression then dap_expression.close() end
         if dap_threads then dap_threads.close() end
-        --if dap_hover then dap_hover.close() end
+        if dap_hover then dap_hover.close() end
       end
+
       dap.listeners.before.event_terminated['widget_setup'] = close_widgets
       dap.listeners.before.event_exited['widget_setup'] = close_widgets
 
@@ -479,6 +489,13 @@ require("lazy").setup({
         p = dap.pause,
         f = dap.step_out,
         x = dap.run_to_cursor,
+        o = function()
+          if dap_hover then
+            dap_hover.close()
+          else
+            dap_hover = dap.hover()
+          end
+        end,
       }
       local function restore_mappings()
         for key, mapping in pairs(saved_map) do
@@ -539,6 +556,16 @@ require("lazy").setup({
       })
     end
   },
+  { "FabijanZulj/blame.nvim",
+    keys = {
+      { "<leader>gb", "<cmd>Blame window<cr>", desc = "Git Blame" },
+      { "<leader>gv", "<cmd>Blame virtual<cr>", desc = "Git Blame (Virtual Text)" },
+    },
+    lazy = false,
+    config = function()
+      require('blame').setup()
+    end,
+  }
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
@@ -639,14 +666,28 @@ local function changecwd(wd)
   vim.notify("CWD changed to " .. wd, vim.log.levels.INFO)
 end
 
+local function relpath(...)
+  return vim.fs.joinpath(...)
+end
+
+local function abspath(...)
+  return vim.fn.fnamemodify(relpath(...), ":p")
+end
+
+local function homepath(...)
+  return abspath(vim.loop.os_homedir(), ...)
+end
+
+local function configpath(...)
+  return abspath(homepath('.config'), ...)
+end
+
 function find_project()
   local cmd = "fd --type d --max-depth 1"
-  local home = vim.loop.os_homedir()
-  local projects = vim.fn.fnamemodify(home .. "/projects", ":p:h")
+  local projects = homepath('projects')
   local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
   async_picker("Choose a project", src, function(selection)
-    local abspath = vim.fn.fnamemodify(home .. "/projects/" .. selection, ":p:h")
-    changecwd(abspath)
+    changecwd(abspath(projects, selection))
     require('telescope.builtin').find_files({ hidden = true })
   end)
 end
@@ -683,6 +724,23 @@ function setwd(always_up)
   end
 end
 
+function edit_nvim_config()
+  vim.cmd("edit " .. abspath(vim.fn.stdpath('config'), 'init.lua'))
+end
+
+function edit_sway_config()
+  vim.cmd("edit " .. configpath('sway', 'config'))
+end
+
+function edit_fish_config()
+  vim.cmd("edit " .. configpath('fish', 'config.fish'))
+end
+
+function go_config()
+  changecwd(homepath('.config'))
+  vim.cmd("Yazi cwd")
+end
+
 require("which-key").add({
   { "<leader> ", "<cmd>e #<cr>", desc = "Switch to most recent buffer" },
   { "<leader>b", group = "Debugger" },
@@ -704,6 +762,7 @@ require("which-key").add({
   { "<leader>fg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
   { "<leader>fo", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
   { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
+  { "<leader>g", group = "Git" },
   { "<leader>m", group = "Misc" },
   { "<leader>p", group = "Package Management" },
   { "<leader>q", group = "Quickfix/Location" },
@@ -715,6 +774,10 @@ require("which-key").add({
   { "<leader>rr", "<cmd>lua setwd(false)<cr>", desc = "Find project root" },
   { "<leader>ru", "<cmd>lua setwd(true)<cr>", desc = "Move project root upward" },
   { "<leader>rf", "<cmd>lua find_project()<cr>", desc = "Find project" },
+  { "<leader>rn", "<cmd>lua edit_nvim_config()<cr>", desc = "Edit neovim config" },
+  { "<leader>rc", "<cmd>lua go_config()<cr>", desc = "Browse config directory" },
+  { "<leader>rs", "<cmd>lua edit_sway_config()<cr>", desc = "Edit sway config" },
+  { "<leader>ri", "<cmd>lua edit_fish_config()<cr>", desc = "Edit fish config" },
   { "<leader>t", group = "Telescope" },
   { "<leader>tb", group = "Builtins" },
   { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", desc = "Search current buffer" },
@@ -745,13 +808,20 @@ require("which-key").add({
   { "<leader>tlt", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Type Definitions" },
   { "<leader>tlw", "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>", desc = "Workspace symbols" },
   { "<leader>tt", "<cmd>lua require('telescope.builtin').treesitter({})<cr>", desc = "Treesitter" },
+  { "<leader>w", group = "Window" },
+  { "<leader>wj", "<cmd>wincmd j<cr>", desc = "Down" },
+  { "<leader>wk", "<cmd>wincmd k<cr>", desc = "Up" },
+  { "<leader>wh", "<cmd>wincmd h<cr>", desc = "Left" },
+  { "<leader>wl", "<cmd>wincmd l<cr>", desc = "Right" },
+  { "<leader>wo", "<cmd>wincmd o<cr>", desc = "Close other windows" },
+  { "<leader>ww", "<cmd>wincmd w<cr>", desc = "Previous" },
   { "<leader>y", group = "Yazi" },
 })
 
 vim.cmd.colorscheme("gruvbox")
 --vim.opt.background = "light"
 
-vim.opt.guifont = "Droid Sans Mono"
+vim.opt.guifont = "Droid Sans Mono:h22"
 
 -- Don't display a ridiculous number of completions
 vim.opt.pumheight = 10
