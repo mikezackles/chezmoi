@@ -565,7 +565,31 @@ require("lazy").setup({
     config = function()
       require('blame').setup()
     end,
-  }
+  },
+  { "NeogitOrg/neogit",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "sindrets/diffview.nvim",
+      "telescope.nvim",
+    },
+  },
+  { "lewis6991/gitsigns.nvim",
+    config = function()
+      require('gitsigns').setup()
+    end,
+  },
+  { "akinsho/toggleterm.nvim",
+    keys = {
+      { "<leader>mt", "<cmd>ToggleTerm<cr>", desc = "Terminal" },
+    },
+    version = "*",
+    config = true,
+    config = function()
+      require('toggleterm').setup({
+        open_mapping = [[<c-q>]],
+      })
+    end,
+  },
 })
 
 -- LSP capabilities necessary for nvim-cmp completion
@@ -821,7 +845,8 @@ require("which-key").add({
 vim.cmd.colorscheme("gruvbox")
 --vim.opt.background = "light"
 
-vim.opt.guifont = "Droid Sans Mono:h22"
+--vim.opt.guifont = "Droid Sans Mono:h22"
+vim.opt.guifont = "Droid Sans Mono"
 
 -- Don't display a ridiculous number of completions
 vim.opt.pumheight = 10
@@ -860,7 +885,7 @@ vim.opt.list = true
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- disable fold at startup
-vim.keymap.set('n', '<leader>mt', '<cmd>set foldenable!<cr>', { desc = "Toggle Folding" })
+vim.keymap.set('n', '<leader>mf', '<cmd>set foldenable!<cr>', { desc = "Toggle Folding" })
 
 -- Line numbers
 vim.opt.number = true
