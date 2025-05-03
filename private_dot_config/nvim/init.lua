@@ -531,7 +531,7 @@ require("lazy").setup({
   },
   { 'smoka7/hop.nvim',
     keys = {
-      { "<leader>h", "<cmd>HopWord<cr>", desc = "Hop Word" }
+      { "<leader>h", "<cmd>HopWord<cr>", mode = {'n', 'v'}, desc = "Hop Word" }
     },
     config = function()
       require('hop').setup({})
@@ -567,6 +567,9 @@ require("lazy").setup({
     end,
   },
   { "NeogitOrg/neogit",
+    keys = {
+      { "<leader>gn", "<cmd>Neogit<cr>", desc = "Neogit" },
+    },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "sindrets/diffview.nvim",
@@ -779,6 +782,7 @@ require("which-key").add({
   { "<leader>cr", "<cmd>colorscheme monokai_ristretto<cr>", desc = "Monokai Ristretto" },
   { "<leader>d", group = "Diagnostics" },
   { "<leader>f", group = "Find" },
+  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
   { "<leader>fc", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .hpp$ | .h$ | .c$ \" })<cr>", desc = "C++ files" },
   { "<leader>fs", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .c$ \" })<cr>", desc = "Source files" },
   { "<leader>fh", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".hpp$ | .h$ \" })<cr>", desc = "Header files" },
@@ -808,7 +812,6 @@ require("which-key").add({
   { "<leader>tbC", "<cmd>lua require('telescope.builtin').commands({})<cr>", desc = "Commands" },
   { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>", desc = "Cursor grep" },
   { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", desc = "Quickfix lists" },
-  { "<leader>tbb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
   { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>", desc = "Command history" },
   { "<leader>tbj", "<cmd>lua require('telescope.builtin').jumplist({})<cr>", desc = "Jump list" },
   { "<leader>tbl", "<cmd>lua require('telescope.builtin').loclist({})<cr>", desc = "Location list" },
@@ -847,6 +850,12 @@ vim.cmd.colorscheme("gruvbox")
 
 --vim.opt.guifont = "Droid Sans Mono:h22"
 vim.opt.guifont = "Droid Sans Mono"
+if vim.g.neovide then
+  vim.g.neovide_scale_factor = 1.5
+  vim.keymap.set({ "n", "v" }, "<leader>=", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>", { desc = "Increase font size" })
+  vim.keymap.set({ "n", "v" }, "<leader>-", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>", { desc = "Decrease font size" })
+  vim.keymap.set({ "n", "v" }, "<leader>0", ":lua vim.g.neovide_scale_factor = 1.5<CR>", { desc = "Reset font size" })
+end
 
 -- Don't display a ridiculous number of completions
 vim.opt.pumheight = 10
