@@ -575,6 +575,15 @@ require("lazy").setup({
       "sindrets/diffview.nvim",
       "telescope.nvim",
     },
+    config = function()
+      require('neogit').setup({
+        mappings = {
+          status = {
+            ['K'] = false, -- Keep our mapping for K instead of using neogit's
+          }
+        },
+      })
+    end
   },
   { "lewis6991/gitsigns.nvim",
     config = function()
