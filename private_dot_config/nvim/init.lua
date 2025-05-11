@@ -721,13 +721,17 @@ local function configpath(...)
   return abspath(homepath('.config'), ...)
 end
 
+function find_project_files()
+    require('telescope.builtin').find_files({ find_command = {'fd','-t=file','-e=cpp','-e=hpp','-e=h','-e=qml'}})
+end
+
 function find_project()
   local cmd = "fd --type d --max-depth 1"
   local projects = homepath('projects')
   local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
   async_picker("Choose a project", src, function(selection)
     changecwd(abspath(projects, selection))
-    require('telescope.builtin').find_files({ hidden = true })
+    find_project_files()
   end)
 end
 
@@ -795,10 +799,9 @@ require("which-key").add({
   { "<leader>d", group = "Diagnostics" },
   { "<leader>f", group = "Find" },
   { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
-  { "<leader>fc", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .hpp$ | .h$ | .c$ \" })<cr>", desc = "C++ files" },
-  { "<leader>fs", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".cpp$ | .c$ \" })<cr>", desc = "Source files" },
-  { "<leader>fh", "<cmd>lua require('telescope.builtin').find_files({ default_text = \".hpp$ | .h$ \" })<cr>", desc = "Header files" },
-  { "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "Find files" },
+  { "<leader>fr", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Recent" },
+  { "<leader>ff", "<cmd>lua find_project_files()<cr>", desc = "Project files" },
+  { "<leader>fa", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "All files" },
   { "<leader>fg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
   { "<leader>fo", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
   { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
