@@ -963,8 +963,3 @@ local function go_eol()
 end
 vim.keymap.set("n", "$", go_eol)
 vim.keymap.set("v", "$", go_eol)
-
-function RELOAD(mod)
-  package.loaded[mod] = nil
-  return require(mod)
-end
