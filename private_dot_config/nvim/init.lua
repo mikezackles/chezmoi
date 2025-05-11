@@ -319,7 +319,7 @@ require("lazy").setup({
     },
     config = function ()
       require("mason-nvim-dap").setup({
-        ensure_installed = { "cpptools", "codelldb" },
+        ensure_installed = { "cppdbg", "codelldb" },
       })
       require("overseer").setup()
       local dap = require("dap")
@@ -382,7 +382,7 @@ require("lazy").setup({
           type = "codelldb",
           request = "launch",
           program = exe_picker,
-          args = args_picker,
+          args = function() vim.split(args_picker(), "%s+") end,
           cwd = '${workspaceFolder}',
           preLaunchTask = "Compile",
           stopOnEntry = false,
@@ -450,9 +450,8 @@ require("lazy").setup({
       dap.defaults.fallback.terminal_win_cmd = function()
         return vim.api.nvim_create_buf(false, true)
       end
-      require('nvim-dap-virtual-text').setup({
-        virt_text_pos = 'eol'
-      })
+      local vtext = require('nvim-dap-virtual-text')
+      vtext.setup({ virt_text_pos = 'eol' })
       dap.listeners.after.event_initialized['widget_setup'] = function()
         local widgets = require('dap.ui.widgets')
         dap_hover = nil
@@ -473,6 +472,7 @@ require("lazy").setup({
         if dap_expression then dap_expression.close() end
         if dap_threads then dap_threads.close() end
         if dap_hover then dap_hover.close() end
+        vtext.disable()
       end
 
       dap.listeners.before.event_terminated['widget_setup'] = close_widgets
