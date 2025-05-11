@@ -615,6 +615,9 @@ require('lspconfig').clangd.setup({
     -- whitelist it here to give clangd permission to run it and detect that
     -- it's actually gcc
     '--query-driver=/usr/bin/c++',
+    -- In particular, clangd inserts the wrong Qt headers (see
+    -- https://github.com/clangd/clangd/issues/374)
+    '--header-insertion=never',
   },
   capabilities = caps,
   --on_attach = function(client, bufnr)
