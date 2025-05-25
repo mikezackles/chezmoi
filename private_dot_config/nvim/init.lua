@@ -592,14 +592,47 @@ require("lazy").setup({
   },
   { "akinsho/toggleterm.nvim",
     keys = {
-      { "<leader>mt", "<cmd>ToggleTerm<cr>", desc = "Terminal" },
+      { "<leader>mt", "<cmd>lua toggle_shell()<cr>", desc = "Terminal" },
+      { "<leader>gl", "<cmd>lua toggle_lazygit()<cr>", desc = "Lazygit" },
     },
     version = "*",
     config = true,
     config = function()
       require('toggleterm').setup({
         open_mapping = [[<c-q>]],
+        direction = 'float',
+        float_opts = {
+          winblend = 10,
+          border = '',
+        },
       })
+
+      -- We at least ensure that we use the current window dimensions as of the
+      -- time the terminal is created
+      local Terminal = require('toggleterm.terminal').Terminal
+
+      local shell = nil
+      function toggle_shell()
+        if not shell then
+          shell = Terminal:new({
+            float_opts = { width = vim.o.columns, height = vim.o.lines },
+            on_close = function(term) shell = nil end,
+          })
+        end
+        shell:toggle()
+      end
+
+      local lazygit = nil
+      function toggle_lazygit()
+        if not lazygit then
+          lazygit = Terminal:new({
+            cmd = 'lazygit',
+            float_opts = { width = vim.o.columns, height = vim.o.lines },
+            on_close = function(term) lazygit = nil end,
+          })
+        end
+        lazygit:toggle()
+      end
     end,
   },
 })
@@ -866,7 +899,7 @@ vim.cmd.colorscheme("gruvbox")
 --vim.opt.guifont = "Droid Sans Mono:h22"
 vim.opt.guifont = "Droid Sans Mono"
 if vim.g.neovide then
-  vim.g.neovide_scale_factor = 1.5
+  vim.g.neovide_scale_factor = 1
   vim.keymap.set({ "n", "v" }, "<leader>=", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>", { desc = "Increase font size" })
   vim.keymap.set({ "n", "v" }, "<leader>-", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>", { desc = "Decrease font size" })
   vim.keymap.set({ "n", "v" }, "<leader>0", ":lua vim.g.neovide_scale_factor = 1.5<CR>", { desc = "Reset font size" })
