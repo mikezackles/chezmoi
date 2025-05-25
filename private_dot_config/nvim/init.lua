@@ -605,17 +605,20 @@ require("lazy").setup({
           winblend = 10,
           border = '',
         },
+        autochdir = true,
+        persist_size = false,
       })
 
       -- We at least ensure that we use the current window dimensions as of the
       -- time the terminal is created
       local Terminal = require('toggleterm.terminal').Terminal
 
+      -- Subtracting 1 from the height leaves space for the status line
       local shell = nil
       function toggle_shell()
         if not shell then
           shell = Terminal:new({
-            float_opts = { width = vim.o.columns, height = vim.o.lines },
+            float_opts = { width = vim.o.columns, height = vim.o.lines - 1},
             on_close = function(term) shell = nil end,
           })
         end
@@ -627,7 +630,7 @@ require("lazy").setup({
         if not lazygit then
           lazygit = Terminal:new({
             cmd = 'lazygit',
-            float_opts = { width = vim.o.columns, height = vim.o.lines },
+            float_opts = { width = vim.o.columns, height = vim.o.lines - 1 },
             on_close = function(term) lazygit = nil end,
           })
         end
