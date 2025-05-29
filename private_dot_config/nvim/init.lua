@@ -599,7 +599,7 @@ require("lazy").setup({
     config = true,
     config = function()
       require('toggleterm').setup({
-        open_mapping = [[<c-q>]],
+        open_mapping = [[<c-z>]],
         direction = 'float',
         float_opts = {
           winblend = 10,
@@ -614,15 +614,15 @@ require("lazy").setup({
       local Terminal = require('toggleterm.terminal').Terminal
 
       -- Subtracting 1 from the height leaves space for the status line
-      local shell = nil
+      local ashell = nil
       function toggle_shell()
-        if not shell then
-          shell = Terminal:new({
+        if not ashell then
+          ashell = Terminal:new({
             float_opts = { width = vim.o.columns, height = vim.o.lines - 1},
             on_close = function(term) shell = nil end,
           })
         end
-        shell:toggle()
+        ashell:toggle()
       end
 
       local lazygit = nil
@@ -767,7 +767,7 @@ function find_project()
   local src = vim.fn.systemlist("cd " .. vim.fn.shellescape(projects) .. " && " .. cmd)
   async_picker("Choose a project", src, function(selection)
     changecwd(abspath(projects, selection))
-    find_project_files()
+    vim.cmd("Yazi cwd")
   end)
 end
 
@@ -846,8 +846,8 @@ require("which-key").add({
   { "<leader>p", group = "Package Management" },
   { "<leader>q", group = "Quickfix/Location" },
   { "<leader>ql", "<cmd>LLToggle!<cr>", desc = "Toggle Location List" },
-  { "<leader>qj", "<cmd>QNext<cr>", desc = "Next" },
-  { "<leader>qk", "<cmd>QPrev<cr>", desc = "Previous" },
+  { "<C-j>", "<cmd>QNext<cr>", desc = "Next" },
+  { "<C-k>", "<cmd>QPrev<cr>", desc = "Previous" },
   { "<leader>qq", "<cmd>QFToggle!<cr>", desc = "Toggle QuickFix" },
   { "<leader>r", group = "Project Root" },
   { "<leader>rr", "<cmd>lua setwd(false)<cr>", desc = "Find project root" },
