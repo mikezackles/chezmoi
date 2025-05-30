@@ -764,7 +764,10 @@ local function configpath(...)
 end
 
 function find_project_files()
-    require('telescope.builtin').find_files({ find_command = {'fd','-t=file','-e=cpp','-e=hpp','-e=h','-e=qml'}})
+  require('telescope.builtin').find_files({
+    find_command = {'fd','-t=file','-e=cpp','-e=hpp','-e=h','-e=qml'},
+    sort_lastused = true,
+  })
 end
 
 function find_project()
@@ -840,13 +843,11 @@ require("which-key").add({
   { "<leader>cr", "<cmd>colorscheme monokai_ristretto<cr>", desc = "Monokai Ristretto" },
   { "<leader>d", group = "Diagnostics" },
   { "<leader>f", group = "Find" },
-  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
-  { "<leader>fr", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Recent" },
+  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({ sort_lastused = true })<cr>", desc = "Buffers" },
   { "<leader>ff", "<cmd>lua find_project_files()<cr>", desc = "Project files" },
-  { "<leader>fa", "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<cr>", desc = "All files" },
+  { "<leader>fa", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, sort_lastused = true })<cr>", desc = "All files" },
   { "<leader>fg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
   { "<leader>fo", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
-  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({})<cr>", desc = "Buffers" },
   { "<leader>g", group = "Git" },
   { "<leader>m", group = "Misc" },
   { "<leader>p", group = "Package Management" },
