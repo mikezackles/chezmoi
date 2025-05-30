@@ -28,6 +28,12 @@ require("lazy").setup({
       })
     end,
   },
+  { "folke/noice.nvim",
+    event = "VeryLazy",
+    opts = {
+    },
+    dependencies = "rcarriga/nvim-notify",
+  },
   { "nvim-telescope/telescope-fzf-native.nvim",
     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
             'cmake --build build --config Release && ' ..
@@ -846,8 +852,8 @@ require("which-key").add({
   { "<leader>p", group = "Package Management" },
   { "<leader>q", group = "Quickfix/Location" },
   { "<leader>ql", "<cmd>LLToggle!<cr>", desc = "Toggle Location List" },
-  { "<C-j>", "<cmd>silent QNext<cr>", desc = "Next" },
-  { "<C-k>", "<cmd>silent QPrev<cr>", desc = "Previous" },
+  { "<C-j>", "<cmd>QNext<cr>", desc = "Next" },
+  { "<C-k>", "<cmd>QPrev<cr>", desc = "Previous" },
   { "<leader>qq", "<cmd>QFToggle!<cr>", desc = "Toggle QuickFix" },
   { "<leader>r", group = "Project Root" },
   { "<leader>rr", "<cmd>lua setwd(false)<cr>", desc = "Find project root" },
