@@ -12,11 +12,12 @@ if not vim.loop.fs_stat(lazy_dir) then
 end
 vim.opt.rtp:prepend(lazy_dir)
 
-vim.g.mapleader = " " -- should be set before requiring lazy
+vim.g.mapleader = " "  -- should be set before requiring lazy
 vim.g.bones_compat = 1 -- silliness to tell zenbones colorscheme we're not installing color picker plugin
 
 require("lazy").setup({
-  { "folke/which-key.nvim",
+  {
+    "folke/which-key.nvim",
     event = "VeryLazy",
     init = function()
       vim.o.timeout = true
@@ -28,18 +29,22 @@ require("lazy").setup({
       })
     end,
   },
-  { "folke/noice.nvim",
+  {
+    "folke/noice.nvim",
     event = "VeryLazy",
     opts = {
     },
     dependencies = "rcarriga/nvim-notify",
   },
-  { "nvim-telescope/telescope-fzf-native.nvim",
+  {
+    "nvim-telescope/telescope-fzf-native.nvim",
     build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && ' ..
-            'cmake --build build --config Release && ' ..
-            'cmake --install build --prefix build',
+        'cmake --build build --config Release && ' ..
+        'cmake --install build --prefix build',
   },
-  { "nvim-telescope/telescope.nvim", branch = '0.1.x',
+  {
+    "nvim-telescope/telescope.nvim",
+    branch = '0.1.x',
     dependencies = {
       "nvim-lua/plenary.nvim",
       "telescope-fzf-native.nvim",
@@ -63,7 +68,7 @@ require("lazy").setup({
         },
         pickers = {
           find_files = {
-            find_command = {"fd", "--type", "f", "--exclude", ".git"},
+            find_command = { "fd", "--type", "f", "--exclude", ".git" },
           },
         }
       })
@@ -104,9 +109,10 @@ require("lazy").setup({
     end,
   },
   { "nvim-tree/nvim-web-devicons" },
-  { "nvim-treesitter/nvim-treesitter",
+  {
+    "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = function ()
+    config = function()
       require("nvim-treesitter.configs").setup({
         ensure_installed = {
           "astro", "c", "cmake", "cpp", "css", "csv", "cuda", "dockerfile",
@@ -125,7 +131,8 @@ require("lazy").setup({
       })
     end,
   },
-  { "neovim/nvim-lspconfig",
+  {
+    "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       --"neoconf.nvim",
@@ -138,17 +145,20 @@ require("lazy").setup({
   ----  "folke/neoconf.nvim", cmd = "Neoconf", config = true,
   ----  keys = { { "<leader>n", "<cmd>Neoconf<cr>", desc = "Neoconf: per-project LSP config" } },
   ----},
-  { "williamboman/mason.nvim",
+  {
+    "williamboman/mason.nvim",
     keys = { { "<leader>pm", "<cmd>Mason<cr>", desc = "Mason LSP package manager" } },
     config = true,
   },
-  { "williamboman/mason-lspconfig.nvim",
+  {
+    "williamboman/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" },
     opts = {
       ensure_installed = { "lua_ls" },
     },
   },
-  { "hrsh7th/nvim-cmp",
+  {
+    "hrsh7th/nvim-cmp",
     dependencies = {
       "LuaSnip",
       "hrsh7th/cmp-nvim-lsp",
@@ -158,10 +168,10 @@ require("lazy").setup({
       "hrsh7th/cmp-nvim-lsp-signature-help",
       "saadparwaiz1/cmp_luasnip",
     },
-    config = function ()
+    config = function()
       local cmp = require('cmp')
       local luasnip = require('luasnip')
-      local has_words_before = function ()
+      local has_words_before = function()
         unpack = unpack or table.unpack
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
         return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
@@ -234,7 +244,8 @@ require("lazy").setup({
       })
     end,
   },
-  { "L3MON4D3/LuaSnip",
+  {
+    "L3MON4D3/LuaSnip",
     version = "v2.*",
     build = "make install_jsregexp"
   },
@@ -251,14 +262,15 @@ require("lazy").setup({
   --  end,
   --},
   -- colorschemes
-  { "ellisonleao/gruvbox.nvim", priority = 1000, config = true },
-  { "rose-pine/neovim", priority = 1000 },
-  { "olimorris/onedarkpro.nvim", priority = 1000 },
-  { "neanias/everforest-nvim", priority = 1000 },
-  { "rebelot/kanagawa.nvim", priority = 1000 },
-  { "tanvirtin/monokai.nvim", priority = 1000 },
-  { "stevearc/qf_helper.nvim",
-    config = function ()
+  { "ellisonleao/gruvbox.nvim",   priority = 1000, config = true },
+  { "rose-pine/neovim",           priority = 1000 },
+  { "olimorris/onedarkpro.nvim",  priority = 1000 },
+  { "neanias/everforest-nvim",    priority = 1000 },
+  { "rebelot/kanagawa.nvim",      priority = 1000 },
+  { "tanvirtin/monokai.nvim",     priority = 1000 },
+  {
+    "stevearc/qf_helper.nvim",
+    config = function()
       require("qf_helper").setup({
         quickfix = {
           default_bindings = false,
@@ -266,7 +278,8 @@ require("lazy").setup({
       })
     end,
   },
-  { "mikavilpas/yazi.nvim",
+  {
+    "mikavilpas/yazi.nvim",
     event = "VeryLazy",
     opts = {
       -- replace netrw
@@ -274,8 +287,8 @@ require("lazy").setup({
       keymaps = {},
     },
     keys = {
-      { "<leader>yy", "<cmd>Yazi<cr>", desc = "Open yazi at current file" },
-      { "<leader>yw", "<cmd>Yazi cwd<cr>", desc = "Open yazi in nvim cwd" },
+      { "<leader>yy", "<cmd>Yazi<cr>",        desc = "Open yazi at current file" },
+      { "<leader>yw", "<cmd>Yazi cwd<cr>",    desc = "Open yazi in nvim cwd" },
       { "<leader>yt", "<cmd>Yazi toggle<cr>", desc = "Resume the last yazi session" },
     },
     init = function()
@@ -284,7 +297,8 @@ require("lazy").setup({
       vim.g.loaded_netrwPlugin = 1
     end
   },
-  { "rcarriga/nvim-notify",
+  {
+    "rcarriga/nvim-notify",
     event = "VeryLazy",
     keys = {
       { "<leader>md", "<cmd>lua vim.notify.dismiss()<cr>", desc = "Dismiss notifications" },
@@ -297,33 +311,34 @@ require("lazy").setup({
       })
     end,
   },
-  { "mfussenegger/nvim-dap",
+  {
+    "mfussenegger/nvim-dap",
     dependencies = {
       "mason.nvim",
       "telescope.nvim",
       "theHamsta/nvim-dap-virtual-text",
       "nvim-neotest/nvim-nio",
       "jay-babu/mason-nvim-dap.nvim", -- simplified DAP server installation
-      "stevearc/overseer.nvim", -- task runner that supports .vscode/tasks.json
+      "stevearc/overseer.nvim",       -- task runner that supports .vscode/tasks.json
     },
     keys = {
-      { "<leader>bb", "<cmd>DapToggleBreakpoint<cr>", desc = "Toggle Breakpoint" },
-      { "<leader>bd", "<cmd>DapClearBreakpoints<cr>", desc = "Clear Breakpoints" },
-      { "<leader>bc", "<cmd>DapContinue<cr>", desc = "Continue" },
-      { "<leader>br", "<cmd>lua require('dap').repl.toggle({ height = 10 })<cr>", desc = "Toggle REPL" },
+      { "<leader>bb", "<cmd>DapToggleBreakpoint<cr>",                                    desc = "Toggle Breakpoint" },
+      { "<leader>bd", "<cmd>DapClearBreakpoints<cr>",                                    desc = "Clear Breakpoints" },
+      { "<leader>bc", "<cmd>DapContinue<cr>",                                            desc = "Continue" },
+      { "<leader>br", "<cmd>lua require('dap').repl.toggle({ height = 10 })<cr>",        desc = "Toggle REPL" },
       --{ "<leader>bn", "<cmd>DapStepOver<cr>", desc = "Step Over" },
       --{ "<leader>bs", "<cmd>DapStepInto<cr>", desc = "Step Into" },
       --{ "<leader>bo", "<cmd>DapStepOut<cr>", desc = "Step Out" },
-      { "<leader>bv", "<cmd>DapVirtualTextToggle<cr>", desc = "Toggle Virtual Text" },
+      { "<leader>bv", "<cmd>DapVirtualTextToggle<cr>",                                   desc = "Toggle Virtual Text" },
       --{ "<leader>bp", "<cmd>DapPause<cr>", desc = "Pause" },
       -- Hover is kinda painful to use due to the API
       --{ "<leader>bh", "<cmd>lua dap_hover = require('dap').hover()<cr>", desc = "Hover" },
-      { "<leader>bp", "<cmd>lua if dap_scopes then dap_scopes.toggle() end<cr>", desc = "Toggle Scopes" },
-      { "<leader>bf", "<cmd>lua if dap_frames then dap_frames.toggle() end<cr>", desc = "Toggle Frames" },
+      { "<leader>bp", "<cmd>lua if dap_scopes then dap_scopes.toggle() end<cr>",         desc = "Toggle Scopes" },
+      { "<leader>bf", "<cmd>lua if dap_frames then dap_frames.toggle() end<cr>",         desc = "Toggle Frames" },
       { "<leader>be", "<cmd>lua if dap_expression then dap_expression.toggle() end<cr>", desc = "Toggle Expression" },
-      { "<leader>bt", "<cmd>lua if dap_threads then dap_threads.toggle() end<cr>", desc = "Toggle Threads" },
+      { "<leader>bt", "<cmd>lua if dap_threads then dap_threads.toggle() end<cr>",       desc = "Toggle Threads" },
     },
-    config = function ()
+    config = function()
       require("mason-nvim-dap").setup({
         ensure_installed = { "cppdbg", "codelldb" },
       })
@@ -332,7 +347,7 @@ require("lazy").setup({
       dap.adapters.cppdbg = {
         id = 'cppdbg',
         type = 'executable',
-        command = vim.fn.stdpath("data").."/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
+        command = vim.fn.stdpath("data") .. "/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
         options = { detached = false }
       }
       dap.adapters.codelldb = {
@@ -378,7 +393,7 @@ require("lazy").setup({
           setupCommands = {
             {
               text = '-enable-pretty-printing',
-              description =  'enable pretty printing',
+              description = 'enable pretty printing',
               ignoreFailures = false,
             },
           },
@@ -535,15 +550,17 @@ require("lazy").setup({
       dap.listeners.before.event_exited['keys'] = restore_mappings
     end,
   },
-  { 'smoka7/hop.nvim',
+  {
+    'smoka7/hop.nvim',
     keys = {
-      { "<leader>h", "<cmd>HopWord<cr>", mode = {'n', 'v'}, desc = "Hop Word" }
+      { "<leader>h", "<cmd>HopWord<cr>", mode = { 'n', 'v' }, desc = "Hop Word" }
     },
     config = function()
       require('hop').setup({})
     end,
   },
-  { 'stevearc/aerial.nvim',
+  {
+    'stevearc/aerial.nvim',
     keys = {
       { "<leader>a", "<cmd>AerialToggle<cr>", desc = "Toggle Aerial" }
     },
@@ -562,9 +579,10 @@ require("lazy").setup({
       })
     end
   },
-  { "FabijanZulj/blame.nvim",
+  {
+    "FabijanZulj/blame.nvim",
     keys = {
-      { "<leader>gb", "<cmd>Blame window<cr>", desc = "Git Blame" },
+      { "<leader>gb", "<cmd>Blame window<cr>",  desc = "Git Blame" },
       { "<leader>gv", "<cmd>Blame virtual<cr>", desc = "Git Blame (Virtual Text)" },
     },
     lazy = false,
@@ -572,7 +590,8 @@ require("lazy").setup({
       require('blame').setup()
     end,
   },
-  { "NeogitOrg/neogit",
+  {
+    "NeogitOrg/neogit",
     keys = {
       { "<leader>gn", "<cmd>Neogit<cr>", desc = "Neogit" },
     },
@@ -591,28 +610,35 @@ require("lazy").setup({
       })
     end
   },
-  { "lewis6991/gitsigns.nvim",
+  {
+    "lewis6991/gitsigns.nvim",
     config = function()
       require('gitsigns').setup()
     end,
   },
-  { "akinsho/toggleterm.nvim",
+  {
+    "akinsho/toggleterm.nvim",
     keys = {
-      { "<leader>mt", "<cmd>lua toggle_shell()<cr>", desc = "Terminal" },
+      { "<leader>mt", "<cmd>lua toggle_shell()<cr>",   desc = "Terminal" },
       { "<leader>gl", "<cmd>lua toggle_lazygit()<cr>", desc = "Lazygit" },
     },
     version = "*",
     config = true,
     config = function()
       require('toggleterm').setup({
+        size = function(term)
+          return vim.o.lines - 10
+        end,
         open_mapping = [[<c-z>]],
-        direction = 'float',
+        direction = 'horizontal',
         float_opts = {
           winblend = 10,
           border = '',
         },
         autochdir = true,
         persist_size = false,
+        --shade_terminals = false,
+        shading_factor = 1,
       })
 
       -- We at least ensure that we use the current window dimensions as of the
@@ -624,7 +650,7 @@ require("lazy").setup({
       function toggle_shell()
         if not ashell then
           ashell = Terminal:new({
-            float_opts = { width = vim.o.columns, height = vim.o.lines - 1},
+            --float_opts = { width = vim.o.columns, height = vim.o.lines - 1 },
             on_close = function(term) shell = nil end,
           })
         end
@@ -636,7 +662,7 @@ require("lazy").setup({
         if not lazygit then
           lazygit = Terminal:new({
             cmd = 'lazygit',
-            float_opts = { width = vim.o.columns, height = vim.o.lines - 1 },
+            --float_opts = { width = vim.o.columns, height = vim.o.lines - 1 },
             on_close = function(term) lazygit = nil end,
           })
         end
@@ -690,9 +716,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
     -- simplify registering key bindings with which-key
     local wk = require("which-key")
-    wk.add({{ "<leader>l", buffer = event.buf, group = "LSP" }})
+    wk.add({ { "<leader>l", buffer = event.buf, group = "LSP" } })
     local map_keys = function(keys, cmd, desc)
-      wk.add({{ keys, cmd, buffer = event.buf, desc = desc }})
+      wk.add({ { keys, cmd, buffer = event.buf, desc = desc } })
     end
     -- helper for checking for binding keys to function only if it exists
     local try_map_keys = function(keys, cmd, desc)
@@ -709,10 +735,11 @@ vim.api.nvim_create_autocmd('LspAttach', {
     try_map_keys('<leader>lr', vim.lsp.buf.references, 'References')
     try_map_keys('<leader>ls', vim.lsp.buf.signature_help, 'Signature help')
     try_map_keys('<leader>lR', vim.lsp.buf.rename, 'Rename')
-    try_map_keys('<leader>ln', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled()) end, 'Toggle inlay hints')
+    try_map_keys('<leader>ln', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled()) end,
+      'Toggle inlay hints')
     if vim.lsp.buf.format ~= nil then
       -- NOTE: Editing buffer while formatting asynchronously "can lead to unexpected changes"
-      map_keys('<leader>lf', function() vim.lsp.buf.format({async = true}) end, 'Format buffer')
+      map_keys('<leader>lf', function() vim.lsp.buf.format({ async = true }) end, 'Format buffer')
       vim.api.nvim_create_autocmd("BufWritePre", {
         desc = 'Format on save',
         buffer = event.buf,
@@ -743,7 +770,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 local curwd = nil
 local function changecwd(wd)
   curwd = wd
-  vim.cmd("cd " .. vim.fn.fnameescape(wd ))
+  vim.cmd("cd " .. vim.fn.fnameescape(wd))
   vim.notify("CWD changed to " .. wd, vim.log.levels.INFO)
 end
 
@@ -765,7 +792,7 @@ end
 
 function find_project_files()
   require('telescope.builtin').find_files({
-    find_command = {'fd','-t=file','-e=cpp','-e=hpp','-e=h','-e=qml'},
+    find_command = { 'fd', '-t=file', '-e=cpp', '-e=hpp', '-e=h', '-e=qml' },
     sort_lastused = true,
   })
 end
@@ -789,14 +816,14 @@ function setwd(always_up)
   }
   if always_up then
     -- lazy way of detecting home directory
-    anchor_names[#anchor_names+1] = ".config"
+    anchor_names[#anchor_names + 1] = ".config"
   end
 
   -- If we've already set a working dir, start from the parent of the current
   -- working directory. If we haven't, start from the current file's directory.
   -- If the current file has no directory, start from the user's home
   -- directory.
-  local path = (always_up and {curwd} or {nil})[1]
+  local path = (always_up and { curwd } or { nil })[1]
   if path == nil then
     path = vim.api.nvim_buf_get_name(0)
     if path == '' then
@@ -830,77 +857,77 @@ function go_config()
 end
 
 require("which-key").add({
-  { "<leader> ", "<cmd>e #<cr>", desc = "Switch to most recent buffer" },
-  { "<leader>b", group = "Debugger" },
-  { "<leader>c", group = "Colors" },
-  { "<leader>cb", "<cmd>exec &bg=='light'? 'set bg=dark' : 'set bg=light'<cr>", desc = "Toggle light/dark background" },
-  { "<leader>cd", "<cmd>colorscheme rose-pine-dawn<cr>", desc = "Rose Pine Dawn" },
-  { "<leader>ce", "<cmd>colorscheme everforest<cr>", desc = "Everforest" },
-  { "<leader>cg", "<cmd>colorscheme gruvbox<cr>", desc = "Gruvbox" },
-  { "<leader>cm", "<cmd>colorscheme monokai_soda<cr>", desc = "Monokai Soda" },
-  { "<leader>co", "<cmd>colorscheme onedark_dark<cr>", desc = "OneDark Dark" },
-  { "<leader>cp", "<cmd>colorscheme monokai_pro<cr>", desc = "Monokai Pro" },
-  { "<leader>cr", "<cmd>colorscheme monokai_ristretto<cr>", desc = "Monokai Ristretto" },
-  { "<leader>d", group = "Diagnostics" },
-  { "<leader>f", group = "Find" },
-  { "<leader>fb", "<cmd>lua require('telescope.builtin').buffers({ sort_lastused = true })<cr>", desc = "Buffers" },
-  { "<leader>ff", "<cmd>lua find_project_files()<cr>", desc = "Project files" },
-  { "<leader>fa", "<cmd>lua require('telescope.builtin').find_files({ hidden = true, sort_lastused = true })<cr>", desc = "All files" },
-  { "<leader>fg", "<cmd>lua require('telescope.builtin').live_grep({})<cr>", desc = "Grep" },
-  { "<leader>fo", "<cmd>lua require('telescope.builtin').oldfiles({})<cr>", desc = "Previously open files" },
-  { "<leader>g", group = "Git" },
-  { "<leader>m", group = "Misc" },
-  { "<leader>p", group = "Package Management" },
-  { "<leader>q", group = "Quickfix/Location" },
-  { "<leader>ql", "<cmd>LLToggle!<cr>", desc = "Toggle Location List" },
-  { "<C-j>", "<cmd>QNext<cr>", desc = "Next" },
-  { "<C-k>", "<cmd>QPrev<cr>", desc = "Previous" },
-  { "<leader>qq", "<cmd>QFToggle!<cr>", desc = "Toggle QuickFix" },
-  { "<leader>r", group = "Project Root" },
-  { "<leader>rr", "<cmd>lua setwd(false)<cr>", desc = "Find project root" },
-  { "<leader>ru", "<cmd>lua setwd(true)<cr>", desc = "Move project root upward" },
-  { "<leader>rf", "<cmd>lua find_project()<cr>", desc = "Find project" },
-  { "<leader>rn", "<cmd>lua edit_nvim_config()<cr>", desc = "Edit neovim config" },
-  { "<leader>rc", "<cmd>lua go_config()<cr>", desc = "Browse config directory" },
-  { "<leader>rs", "<cmd>lua edit_sway_config()<cr>", desc = "Edit sway config" },
-  { "<leader>ri", "<cmd>lua edit_fish_config()<cr>", desc = "Edit fish config" },
-  { "<leader>t", group = "Telescope" },
-  { "<leader>tb", group = "Builtins" },
-  { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>", desc = "Search current buffer" },
-  { "<leader>tbC", "<cmd>lua require('telescope.builtin').commands({})<cr>", desc = "Commands" },
-  { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>", desc = "Cursor grep" },
-  { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>", desc = "Quickfix lists" },
-  { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>", desc = "Command history" },
-  { "<leader>tbj", "<cmd>lua require('telescope.builtin').jumplist({})<cr>", desc = "Jump list" },
-  { "<leader>tbl", "<cmd>lua require('telescope.builtin').loclist({})<cr>", desc = "Location list" },
-  { "<leader>tbm", "<cmd>lua require('telescope.builtin').marks({})<cr>", desc = "Marks" },
-  { "<leader>tbp", "<cmd>lua require('telescope.builtin').pickers({})<cr>", desc = "Pickers" },
-  { "<leader>tbq", "<cmd>lua require('telescope.builtin').quickfix({})<cr>", desc = "Quickfix" },
-  { "<leader>tbr", "<cmd>lua require('telescope.builtin').registers({})<cr>", desc = "Registers" },
-  { "<leader>tbs", "<cmd>lua require('telescope.builtin').colorscheme({})<cr>", desc = "Colorscheme" },
-  { "<leader>tbt", "<cmd>lua require('telescope.builtin').git_files({})<cr>", desc = "Find git files" },
-  { "<leader>tbv", "<cmd>lua require('telescope.builtin').vim_options({})<cr>", desc = "Vim options" },
-  { "<leader>tbz", "<cmd>lua require('telescope.builtin').spell_suggest({})<cr>", desc = "Spelling" },
-  { "<leader>tl", group = "LSP" },
-  { "<leader>tlC", "<cmd>lua require('telescope.builtin').lsp_outgoing_calls({})<cr>", desc = "Outgoing calls" },
-  { "<leader>tlW", "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({})<cr>", desc = "Dynamic workspace symbols" },
-  { "<leader>tlc", "<cmd>lua require('telescope.builtin').lsp_incoming_calls({})<cr>", desc = "Incoming calls" },
-  { "<leader>tld", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Definitions" },
-  { "<leader>tle", "<cmd>lua require('telescope.builtin').diagnositics({})<cr>", desc = "Diagnostics" },
-  { "<leader>tli", "<cmd>lua require('telescope.builtin').lsp_implementations({})<cr>", desc = "Implementations" },
-  { "<leader>tlr", "<cmd>lua require('telescope.builtin').lsp_references({})<cr>", desc = "References" },
-  { "<leader>tls", "<cmd>lua require('telescope.builtin').lsp_document_symbols({})<cr>", desc = "Document symbols" },
-  { "<leader>tlt", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>", desc = "Type Definitions" },
-  { "<leader>tlw", "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>", desc = "Workspace symbols" },
-  { "<leader>tt", "<cmd>lua require('telescope.builtin').treesitter({})<cr>", desc = "Treesitter" },
-  { "<leader>w", group = "Window" },
-  { "<leader>wj", "<cmd>wincmd j<cr>", desc = "Down" },
-  { "<leader>wk", "<cmd>wincmd k<cr>", desc = "Up" },
-  { "<leader>wh", "<cmd>wincmd h<cr>", desc = "Left" },
-  { "<leader>wl", "<cmd>wincmd l<cr>", desc = "Right" },
-  { "<leader>wo", "<cmd>wincmd o<cr>", desc = "Close other windows" },
-  { "<leader>ww", "<cmd>wincmd w<cr>", desc = "Previous" },
-  { "<leader>y", group = "Yazi" },
+  { "<leader> ",   "<cmd>e #<cr>",                                                                                  desc = "Switch to most recent buffer" },
+  { "<leader>b",   group = "Debugger" },
+  { "<leader>c",   group = "Colors" },
+  { "<leader>cb",  "<cmd>exec &bg=='light'? 'set bg=dark' : 'set bg=light'<cr>",                                    desc = "Toggle light/dark background" },
+  { "<leader>cd",  "<cmd>colorscheme rose-pine-dawn<cr>",                                                           desc = "Rose Pine Dawn" },
+  { "<leader>ce",  "<cmd>colorscheme everforest<cr><cmd>set bg=light<cr>",                                          desc = "Everforest" },
+  { "<leader>cg",  "<cmd>colorscheme gruvbox<cr>",                                                                  desc = "Gruvbox" },
+  { "<leader>cm",  "<cmd>colorscheme monokai_soda<cr>",                                                             desc = "Monokai Soda" },
+  { "<leader>co",  "<cmd>colorscheme onedark_dark<cr>",                                                             desc = "OneDark Dark" },
+  { "<leader>cp",  "<cmd>colorscheme monokai_pro<cr>",                                                              desc = "Monokai Pro" },
+  { "<leader>cr",  "<cmd>colorscheme monokai_ristretto<cr>",                                                        desc = "Monokai Ristretto" },
+  { "<leader>d",   group = "Diagnostics" },
+  { "<leader>f",   group = "Find" },
+  { "<leader>fb",  "<cmd>lua require('telescope.builtin').buffers({ sort_lastused = true })<cr>",                   desc = "Buffers" },
+  { "<leader>ff",  "<cmd>lua find_project_files()<cr>",                                                             desc = "Project files" },
+  { "<leader>fa",  "<cmd>lua require('telescope.builtin').find_files({ hidden = true, sort_lastused = true })<cr>", desc = "All files" },
+  { "<leader>fg",  "<cmd>lua require('telescope.builtin').live_grep({})<cr>",                                       desc = "Grep" },
+  { "<leader>fo",  "<cmd>lua require('telescope.builtin').oldfiles({})<cr>",                                        desc = "Previously open files" },
+  { "<leader>g",   group = "Git" },
+  { "<leader>m",   group = "Misc" },
+  { "<leader>p",   group = "Package Management" },
+  { "<leader>q",   group = "Quickfix/Location" },
+  { "<leader>ql",  "<cmd>LLToggle!<cr>",                                                                            desc = "Toggle Location List" },
+  { "<C-j>",       "<cmd>QNext<cr>",                                                                                desc = "Next" },
+  { "<C-k>",       "<cmd>QPrev<cr>",                                                                                desc = "Previous" },
+  { "<leader>qq",  "<cmd>QFToggle!<cr>",                                                                            desc = "Toggle QuickFix" },
+  { "<leader>r",   group = "Project Root" },
+  { "<leader>rr",  "<cmd>lua setwd(false)<cr>",                                                                     desc = "Find project root" },
+  { "<leader>ru",  "<cmd>lua setwd(true)<cr>",                                                                      desc = "Move project root upward" },
+  { "<leader>rf",  "<cmd>lua find_project()<cr>",                                                                   desc = "Find project" },
+  { "<leader>rn",  "<cmd>lua edit_nvim_config()<cr>",                                                               desc = "Edit neovim config" },
+  { "<leader>rc",  "<cmd>lua go_config()<cr>",                                                                      desc = "Browse config directory" },
+  { "<leader>rs",  "<cmd>lua edit_sway_config()<cr>",                                                               desc = "Edit sway config" },
+  { "<leader>ri",  "<cmd>lua edit_fish_config()<cr>",                                                               desc = "Edit fish config" },
+  { "<leader>t",   group = "Telescope" },
+  { "<leader>tb",  group = "Builtins" },
+  { "<leader>tb/", "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({})<cr>",                       desc = "Search current buffer" },
+  { "<leader>tbC", "<cmd>lua require('telescope.builtin').commands({})<cr>",                                        desc = "Commands" },
+  { "<leader>tbG", "<cmd>lua require('telescope.builtin').grep_string({})<cr>",                                     desc = "Cursor grep" },
+  { "<leader>tbQ", "<cmd>lua require('telescope.builtin').quickfixhistory({})<cr>",                                 desc = "Quickfix lists" },
+  { "<leader>tbh", "<cmd>lua require('telescope.builtin').command_history({})<cr>",                                 desc = "Command history" },
+  { "<leader>tbj", "<cmd>lua require('telescope.builtin').jumplist({})<cr>",                                        desc = "Jump list" },
+  { "<leader>tbl", "<cmd>lua require('telescope.builtin').loclist({})<cr>",                                         desc = "Location list" },
+  { "<leader>tbm", "<cmd>lua require('telescope.builtin').marks({})<cr>",                                           desc = "Marks" },
+  { "<leader>tbp", "<cmd>lua require('telescope.builtin').pickers({})<cr>",                                         desc = "Pickers" },
+  { "<leader>tbq", "<cmd>lua require('telescope.builtin').quickfix({})<cr>",                                        desc = "Quickfix" },
+  { "<leader>tbr", "<cmd>lua require('telescope.builtin').registers({})<cr>",                                       desc = "Registers" },
+  { "<leader>tbs", "<cmd>lua require('telescope.builtin').colorscheme({})<cr>",                                     desc = "Colorscheme" },
+  { "<leader>tbt", "<cmd>lua require('telescope.builtin').git_files({})<cr>",                                       desc = "Find git files" },
+  { "<leader>tbv", "<cmd>lua require('telescope.builtin').vim_options({})<cr>",                                     desc = "Vim options" },
+  { "<leader>tbz", "<cmd>lua require('telescope.builtin').spell_suggest({})<cr>",                                   desc = "Spelling" },
+  { "<leader>tl",  group = "LSP" },
+  { "<leader>tlC", "<cmd>lua require('telescope.builtin').lsp_outgoing_calls({})<cr>",                              desc = "Outgoing calls" },
+  { "<leader>tlW", "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({})<cr>",                   desc = "Dynamic workspace symbols" },
+  { "<leader>tlc", "<cmd>lua require('telescope.builtin').lsp_incoming_calls({})<cr>",                              desc = "Incoming calls" },
+  { "<leader>tld", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>",                                 desc = "Definitions" },
+  { "<leader>tle", "<cmd>lua require('telescope.builtin').diagnositics({})<cr>",                                    desc = "Diagnostics" },
+  { "<leader>tli", "<cmd>lua require('telescope.builtin').lsp_implementations({})<cr>",                             desc = "Implementations" },
+  { "<leader>tlr", "<cmd>lua require('telescope.builtin').lsp_references({})<cr>",                                  desc = "References" },
+  { "<leader>tls", "<cmd>lua require('telescope.builtin').lsp_document_symbols({})<cr>",                            desc = "Document symbols" },
+  { "<leader>tlt", "<cmd>lua require('telescope.builtin').lsp_definitions({})<cr>",                                 desc = "Type Definitions" },
+  { "<leader>tlw", "<cmd>lua require('telescope.builtin').lsp_workspace_symbols({})<cr>",                           desc = "Workspace symbols" },
+  { "<leader>tt",  "<cmd>lua require('telescope.builtin').treesitter({})<cr>",                                      desc = "Treesitter" },
+  { "<leader>w",   group = "Window" },
+  { "<leader>wj",  "<cmd>wincmd j<cr>",                                                                             desc = "Down" },
+  { "<leader>wk",  "<cmd>wincmd k<cr>",                                                                             desc = "Up" },
+  { "<leader>wh",  "<cmd>wincmd h<cr>",                                                                             desc = "Left" },
+  { "<leader>wl",  "<cmd>wincmd l<cr>",                                                                             desc = "Right" },
+  { "<leader>wo",  "<cmd>wincmd o<cr>",                                                                             desc = "Close other windows" },
+  { "<leader>ww",  "<cmd>wincmd w<cr>",                                                                             desc = "Previous" },
+  { "<leader>y",   group = "Yazi" },
 })
 
 vim.cmd.colorscheme("gruvbox")
@@ -910,8 +937,10 @@ vim.cmd.colorscheme("gruvbox")
 vim.opt.guifont = "Droid Sans Mono"
 if vim.g.neovide then
   vim.g.neovide_scale_factor = 1
-  vim.keymap.set({ "n", "v" }, "<leader>=", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>", { desc = "Increase font size" })
-  vim.keymap.set({ "n", "v" }, "<leader>-", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>", { desc = "Decrease font size" })
+  vim.keymap.set({ "n", "v" }, "<leader>=", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>",
+    { desc = "Increase font size" })
+  vim.keymap.set({ "n", "v" }, "<leader>-", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>",
+    { desc = "Decrease font size" })
   vim.keymap.set({ "n", "v" }, "<leader>0", ":lua vim.g.neovide_scale_factor = 1.5<CR>", { desc = "Reset font size" })
 end
 
