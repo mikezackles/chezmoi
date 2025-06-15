@@ -10,6 +10,7 @@ config.bind('l', 'tab-next')
 config.bind('t', 'cmd-set-text -s :open -t')
 
 #config.set('content.notifications.enabled', True, '*.slack.com')
+config.set('content.notifications.enabled', False)
 
 config.load_autoconfig(False)
 
